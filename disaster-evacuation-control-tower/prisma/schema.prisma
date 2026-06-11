@@ -1,0 +1,707 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrganizationType {
+  government_agency
+  ngo
+  local_admin
+  volunteer_group
+  shelter_operator
+}
+
+enum RecordStatus {
+  active
+  inactive
+  archived
+}
+
+enum UserStatus {
+  active
+  suspended
+  inactive
+}
+
+enum Role {
+  government_command
+  dispatcher
+  verifier
+  helper_driver
+  shelter_manager
+  call_center
+}
+
+enum ScopeType {
+  global
+  province
+  district
+  tambon
+  village
+}
+
+enum AreaType {
+  province
+  district
+  tambon
+  village
+}
+
+enum IncidentType {
+  flood
+}
+
+enum IncidentStatus {
+  active
+  monitoring
+  closed
+}
+
+enum HelpRequestStatus {
+  new
+  needs_verification
+  verified
+  assigned
+  in_progress
+  completed
+  cancelled
+  merged_duplicate
+}
+
+enum LocationSource {
+  gps
+  manual_pin
+  call_center
+  sms
+  unknown
+}
+
+enum PriorityBand {
+  critical
+  high
+  medium
+  low
+}
+
+enum DuplicateReviewStatus {
+  possible_duplicate
+  confirmed_duplicate
+  not_duplicate
+}
+
+enum RequestEventType {
+  water_rising
+  medical_condition_worse
+  people_count_changed
+  moved_location
+  no_longer_need_help
+  urgent_message
+  internal_note
+}
+
+enum RequestEventReviewStatus {
+  unreviewed
+  acknowledged
+  applied
+  rejected
+}
+
+enum VehicleStatus {
+  available
+  assigned
+  on_mission
+  needs_check
+  refueling
+  maintenance
+  unsafe
+  offline
+}
+
+enum FuelUnit {
+  liters
+  percent
+}
+
+enum FuelConsumptionMode {
+  per_km
+  per_hour
+}
+
+enum PositionSource {
+  gps
+  manual
+  sms
+}
+
+enum SafetyStatus {
+  normal
+  offline
+  danger
+  sos
+}
+
+enum ShelterOperationalStatusValue {
+  open
+  near_full
+  full
+  closed
+}
+
+enum OperationalLocationType {
+  base
+  refuel_point
+  staging_area
+}
+
+enum OperationalLocationStatus {
+  open
+  limited
+  closed
+}
+
+enum MissionStatus {
+  assigned
+  accepted
+  on_way
+  arrived_pickup
+  transporting
+  arrived_shelter
+  completed
+  cancelled
+  unsafe
+  offline
+}
+
+enum MissionStopType {
+  pickup
+  shelter
+  refuel
+  base
+  staging_area
+}
+
+enum MissionStopStatus {
+  pending
+  arrived
+  departed
+  skipped
+}
+
+enum CommunicationChannel {
+  call
+  sms
+}
+
+enum CommunicationDirection {
+  inbound
+  outbound
+}
+
+enum CommunicationStatus {
+  success
+  failed
+}
+
+model Organization {
+  id                  String                   @id @default(cuid())
+  name                String
+  type                OrganizationType
+  status              RecordStatus             @default(active)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  memberships         OrganizationMembership[]
+  roleAssignments     RoleAssignment[]
+  vehicles            Vehicle[]
+  helperTeams         HelperTeam[]
+  shelters            Shelter[]
+  operationalLocations OperationalLocation[]
+}
+
+model User {
+  id                         String                   @id @default(cuid())
+  name                       String
+  email                      String?                  @unique
+  phone                      String?                  @unique
+  status                     UserStatus               @default(active)
+  createdAt                  DateTime                 @default(now())
+  updatedAt                  DateTime                 @updatedAt
+  memberships                OrganizationMembership[]
+  roleAssignments            RoleAssignment[]
+  verifiedRequests           HelpRequest[]            @relation("RequestVerifier")
+  requestEventsReviewed      RequestEvent[]           @relation("RequestEventReviewer")
+  vehiclePositionsReported   VehiclePosition[]        @relation("VehiclePositionReporter")
+  fuelLogsReported           FuelLog[]                @relation("FuelLogReporter")
+  safetyChecksReported       HelperSafetyCheck[]      @relation("SafetyCheckReporter")
+  communicationsOperated     CommunicationLog[]       @relation("CommunicationOperator")
+  missionsAssigned           Mission[]                @relation("MissionAssigner")
+  duplicateLinksMarked       RequestDuplicateLink[]    @relation("DuplicateLinkMarker")
+  auditLogs                  AuditLog[]               @relation("AuditActor")
+}
+
+model OrganizationMembership {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  status         RecordStatus @default(active)
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([userId, organizationId])
+}
+
+model RoleAssignment {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           Role
+  scopeType      ScopeType
+  areaId         String?
+  canCrossArea   Boolean      @default(false)
+  status         RecordStatus @default(active)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  user           User         @relation(fields: [userId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  area           Area?        @relation(fields: [areaId], references: [id])
+
+  @@index([userId, role, status])
+  @@index([scopeType, areaId])
+}
+
+model Area {
+  id                   String                @id @default(cuid())
+  name                 String
+  type                 AreaType
+  parentId             String?
+  centroidLatitude     Decimal?              @db.Decimal(10, 7)
+  centroidLongitude    Decimal?              @db.Decimal(10, 7)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  parent               Area?                 @relation("AreaHierarchy", fields: [parentId], references: [id])
+  children             Area[]                @relation("AreaHierarchy")
+  roleAssignments      RoleAssignment[]
+  incidents            Incident[]
+  helpRequests         HelpRequest[]
+  vehicles             Vehicle[]
+  shelters             Shelter[]
+  operationalLocations OperationalLocation[]
+
+  @@index([parentId])
+  @@index([type])
+}
+
+model Incident {
+  id                   String                     @id @default(cuid())
+  type                 IncidentType               @default(flood)
+  areaId               String
+  status               IncidentStatus             @default(active)
+  severity             Int                        @default(1)
+  startedAt            DateTime
+  endedAt              DateTime?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  area                 Area                       @relation(fields: [areaId], references: [id])
+  helpRequests         HelpRequest[]
+  requestEvents        RequestEvent[]
+  missions             Mission[]
+  fuelLogs             FuelLog[]
+  safetyChecks         HelperSafetyCheck[]
+  shelterStatuses      ShelterOperationalStatus[]
+  communications       CommunicationLog[]
+  operationalLocations OperationalLocation[]
+}
+
+model HelpRequest {
+  id                       String                  @id @default(cuid())
+  incidentId               String
+  areaId                   String
+  trackingCode             String                  @unique @default(uuid())
+  idempotencyKey           String?
+  source                   LocationSource          @default(unknown)
+  latitude                 Decimal                 @db.Decimal(10, 7)
+  longitude                Decimal                 @db.Decimal(10, 7)
+  locationAccuracy         Decimal?                @db.Decimal(8, 2)
+  locationSource           LocationSource          @default(unknown)
+  addressText              String?
+  landmarkOrDirections     String?
+  reporterName             String?
+  reporterPhone            String?
+  peopleCount              Int                     @default(1)
+  unableToSelfRescue       Boolean                 @default(false)
+  medicalEmergency         Boolean                 @default(false)
+  trapped                  Boolean                 @default(false)
+  waterRising              Boolean                 @default(false)
+  elderlyCount             Int                     @default(0)
+  disabledCount            Int                     @default(0)
+  childCount               Int                     @default(0)
+  pregnantCount            Int                     @default(0)
+  bedriddenCount           Int                     @default(0)
+  status                   HelpRequestStatus       @default(new)
+  duplicateStatus          DuplicateReviewStatus?
+  suspiciousSubmission     Boolean                 @default(false)
+  priorityScore            Int                     @default(0)
+  priorityBand             PriorityBand            @default(low)
+  priorityExplanation      String                  @default("")
+  priorityFactors          Json                    @default("{}")
+  verifiedByUserId         String?
+  lastVerifiedAt           DateTime?
+  cancelledAt              DateTime?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  incident                 Incident                @relation(fields: [incidentId], references: [id])
+  area                     Area                    @relation(fields: [areaId], references: [id])
+  verifiedBy               User?                   @relation("RequestVerifier", fields: [verifiedByUserId], references: [id])
+  households               Household[]
+  people                   Person[]
+  duplicateLinksFrom       RequestDuplicateLink[]  @relation("DuplicateSource")
+  duplicateLinksTo         RequestDuplicateLink[]  @relation("DuplicateCandidate")
+  events                   RequestEvent[]
+  primaryMissions          Mission[]               @relation("MissionPrimaryRequest")
+  missionStops             MissionStop[]
+  communications           CommunicationLog[]
+
+  @@unique([incidentId, idempotencyKey])
+  @@index([incidentId])
+  @@index([areaId])
+  @@index([status])
+  @@index([incidentId, areaId, status])
+  @@index([priorityBand, priorityScore])
+}
+
+model Household {
+  id             String      @id @default(cuid())
+  helpRequestId  String
+  alias          String?
+  contactName    String?
+  contactPhone   String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  helpRequest    HelpRequest @relation(fields: [helpRequestId], references: [id])
+}
+
+model Person {
+  id                 String      @id @default(cuid())
+  helpRequestId      String
+  alias              String?
+  ageGroup           String?
+  mobility           String?
+  medicalNeeds       String?
+  isElderly          Boolean     @default(false)
+  isDisabled         Boolean     @default(false)
+  isChild            Boolean     @default(false)
+  isPregnant         Boolean     @default(false)
+  isBedridden        Boolean     @default(false)
+  vulnerabilityFlags Json        @default("[]")
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  helpRequest        HelpRequest @relation(fields: [helpRequestId], references: [id])
+}
+
+model RequestDuplicateLink {
+  id                 String                @id @default(cuid())
+  sourceRequestId    String
+  candidateRequestId String
+  status             DuplicateReviewStatus @default(possible_duplicate)
+  reason             String?
+  markedByUserId     String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  sourceRequest      HelpRequest           @relation("DuplicateSource", fields: [sourceRequestId], references: [id])
+  candidateRequest   HelpRequest           @relation("DuplicateCandidate", fields: [candidateRequestId], references: [id])
+  markedBy           User?                 @relation("DuplicateLinkMarker", fields: [markedByUserId], references: [id])
+
+  @@unique([sourceRequestId, candidateRequestId])
+}
+
+model RequestEvent {
+  id               String                   @id @default(cuid())
+  incidentId       String
+  helpRequestId    String
+  eventType        RequestEventType
+  source           String
+  message          String?
+  structuredChange Json                     @default("{}")
+  reviewStatus     RequestEventReviewStatus @default(unreviewed)
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  reviewNote       String?
+  createdAt        DateTime                 @default(now())
+  incident         Incident                 @relation(fields: [incidentId], references: [id])
+  helpRequest      HelpRequest              @relation(fields: [helpRequestId], references: [id])
+  reviewedBy       User?                    @relation("RequestEventReviewer", fields: [reviewedByUserId], references: [id])
+
+  @@index([incidentId, reviewStatus])
+  @@index([helpRequestId, createdAt])
+}
+
+model Vehicle {
+  id                           String                    @id @default(cuid())
+  organizationId               String
+  areaId                       String
+  homeBaseLocationId           String?
+  name                         String
+  registrationCode             String?                   @unique
+  maxPeople                    Int
+  maxWeight                    Decimal?                  @db.Decimal(10, 2)
+  canCarryNonWalkingPerson     Boolean                   @default(false)
+  canCarryStretcher            Boolean                   @default(false)
+  canCarrySupplies             Boolean                   @default(true)
+  capacityNotes                String?
+  fuelUnit                     FuelUnit                  @default(liters)
+  fuelCapacity                 Decimal                   @db.Decimal(10, 2)
+  currentFuel                  Decimal                   @db.Decimal(10, 2)
+  fuelConsumptionMode          FuelConsumptionMode       @default(per_km)
+  estimatedFuelConsumptionRate Decimal                   @db.Decimal(10, 4)
+  emergencyReserveFuel         Decimal                   @db.Decimal(10, 2)
+  fuelLastVerifiedAt           DateTime?
+  status                       VehicleStatus             @default(available)
+  version                      Int                       @default(1)
+  createdAt                    DateTime                  @default(now())
+  updatedAt                    DateTime                  @updatedAt
+  organization                 Organization              @relation(fields: [organizationId], references: [id])
+  area                         Area                      @relation(fields: [areaId], references: [id])
+  homeBaseLocation             OperationalLocation?      @relation("VehicleHomeBase", fields: [homeBaseLocationId], references: [id])
+  helperTeams                  HelperTeam[]
+  positions                    VehiclePosition[]
+  fuelLogs                     FuelLog[]
+  safetyChecks                 HelperSafetyCheck[]
+  missions                     Mission[]
+
+  @@index([areaId, status])
+  @@index([status])
+  @@index([organizationId])
+}
+
+model HelperTeam {
+  id                String              @id @default(cuid())
+  organizationId    String
+  assignedVehicleId String?
+  name              String
+  phone             String?
+  members           Json                @default("[]")
+  skills            Json                @default("[]")
+  fatigueStatus     String?
+  safetyStatus      SafetyStatus        @default(normal)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  organization      Organization        @relation(fields: [organizationId], references: [id])
+  assignedVehicle   Vehicle?            @relation(fields: [assignedVehicleId], references: [id])
+  positions         VehiclePosition[]
+  safetyChecks      HelperSafetyCheck[]
+  missions          Mission[]
+}
+
+model VehiclePosition {
+  id             String         @id @default(cuid())
+  vehicleId      String
+  helperTeamId   String?
+  latitude       Decimal        @db.Decimal(10, 7)
+  longitude      Decimal        @db.Decimal(10, 7)
+  accuracy       Decimal?       @db.Decimal(8, 2)
+  source         PositionSource
+  timestamp      DateTime
+  reportedById   String?
+  vehicle        Vehicle        @relation(fields: [vehicleId], references: [id])
+  helperTeam     HelperTeam?    @relation(fields: [helperTeamId], references: [id])
+  reportedBy     User?          @relation("VehiclePositionReporter", fields: [reportedById], references: [id])
+
+  @@index([vehicleId, timestamp])
+}
+
+model FuelLog {
+  id           String     @id @default(cuid())
+  incidentId   String
+  vehicleId    String
+  fuelLevel    Decimal    @db.Decimal(10, 2)
+  source       String
+  reportedById String?
+  note         String?
+  timestamp    DateTime
+  incident     Incident   @relation(fields: [incidentId], references: [id])
+  vehicle      Vehicle    @relation(fields: [vehicleId], references: [id])
+  reportedBy   User?      @relation("FuelLogReporter", fields: [reportedById], references: [id])
+
+  @@index([incidentId, vehicleId, timestamp])
+}
+
+model HelperSafetyCheck {
+  id            String       @id @default(cuid())
+  incidentId    String
+  helperTeamId  String
+  vehicleId     String?
+  status        SafetyStatus
+  latitude      Decimal?     @db.Decimal(10, 7)
+  longitude     Decimal?     @db.Decimal(10, 7)
+  note          String?
+  checkedAt     DateTime
+  reportedById  String?
+  incident      Incident     @relation(fields: [incidentId], references: [id])
+  helperTeam    HelperTeam   @relation(fields: [helperTeamId], references: [id])
+  vehicle       Vehicle?     @relation(fields: [vehicleId], references: [id])
+  reportedBy    User?        @relation("SafetyCheckReporter", fields: [reportedById], references: [id])
+
+  @@index([incidentId, status, checkedAt])
+}
+
+model Shelter {
+  id                   String                     @id @default(cuid())
+  organizationId       String?
+  areaId               String
+  name                 String
+  latitude             Decimal                    @db.Decimal(10, 7)
+  longitude            Decimal                    @db.Decimal(10, 7)
+  baselineCapacity     Int
+  baselineAccessibility String?
+  notes                String?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  organization         Organization?              @relation(fields: [organizationId], references: [id])
+  area                 Area                       @relation(fields: [areaId], references: [id])
+  operationalStatuses  ShelterOperationalStatus[]
+  missionStops         MissionStop[]
+}
+
+model ShelterOperationalStatus {
+  id                   String                        @id @default(cuid())
+  incidentId            String
+  shelterId             String
+  status                ShelterOperationalStatusValue @default(open)
+  currentOccupancy      Int                           @default(0)
+  maxUsableCapacity     Int
+  accessibility         String?
+  medicalSupport        Boolean                       @default(false)
+  foodStatus            String?
+  waterStatus           String?
+  lastUpdatedAt         DateTime
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  incident              Incident                      @relation(fields: [incidentId], references: [id])
+  shelter               Shelter                       @relation(fields: [shelterId], references: [id])
+
+  @@unique([incidentId, shelterId])
+  @@index([incidentId, status])
+}
+
+model OperationalLocation {
+  id              String                    @id @default(cuid())
+  incidentId      String
+  organizationId  String?
+  areaId          String
+  type            OperationalLocationType
+  name            String
+  latitude        Decimal                   @db.Decimal(10, 7)
+  longitude       Decimal                   @db.Decimal(10, 7)
+  status          OperationalLocationStatus @default(open)
+  notes           String?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  incident        Incident                  @relation(fields: [incidentId], references: [id])
+  organization    Organization?             @relation(fields: [organizationId], references: [id])
+  area            Area                      @relation(fields: [areaId], references: [id])
+  homeBaseVehicles Vehicle[]                @relation("VehicleHomeBase")
+  missionStops    MissionStop[]
+
+  @@index([incidentId, areaId, type, status])
+}
+
+model Mission {
+  id                    String          @id @default(cuid())
+  incidentId            String
+  primaryHelpRequestId  String?
+  vehicleId             String
+  helperTeamId          String?
+  status                MissionStatus   @default(assigned)
+  etaMinMinutes         Int?
+  etaMaxMinutes         Int?
+  delayReason           String?
+  hasEmergencyOverride  Boolean         @default(false)
+  overrideReason        String?
+  assignedByUserId      String
+  version               Int             @default(1)
+  assignedAt            DateTime        @default(now())
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  incident              Incident        @relation(fields: [incidentId], references: [id])
+  primaryHelpRequest    HelpRequest?    @relation("MissionPrimaryRequest", fields: [primaryHelpRequestId], references: [id])
+  vehicle               Vehicle         @relation(fields: [vehicleId], references: [id])
+  helperTeam            HelperTeam?     @relation(fields: [helperTeamId], references: [id])
+  assignedBy            User            @relation("MissionAssigner", fields: [assignedByUserId], references: [id])
+  stops                 MissionStop[]
+
+  @@index([incidentId, status])
+  @@index([status])
+  @@index([vehicleId, status])
+  @@index([primaryHelpRequestId, status])
+}
+
+model MissionStop {
+  id                    String               @id @default(cuid())
+  missionId             String
+  helpRequestId         String?
+  shelterId             String?
+  operationalLocationId String?
+  sequence              Int
+  stopType              MissionStopType
+  latitude              Decimal?             @db.Decimal(10, 7)
+  longitude             Decimal?             @db.Decimal(10, 7)
+  status                MissionStopStatus    @default(pending)
+  arrivedAt             DateTime?
+  departedAt            DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  mission               Mission              @relation(fields: [missionId], references: [id])
+  helpRequest           HelpRequest?         @relation(fields: [helpRequestId], references: [id])
+  shelter               Shelter?             @relation(fields: [shelterId], references: [id])
+  operationalLocation   OperationalLocation? @relation(fields: [operationalLocationId], references: [id])
+
+  @@unique([missionId, sequence])
+  @@index([helpRequestId])
+  @@index([shelterId])
+  @@index([operationalLocationId])
+}
+
+model CommunicationLog {
+  id             String                 @id @default(cuid())
+  incidentId     String
+  helpRequestId  String?
+  phoneNumber    String
+  channel        CommunicationChannel
+  direction      CommunicationDirection
+  messageType    String
+  templateLabel  String?
+  messageBody    String?
+  status         CommunicationStatus
+  failureReason  String?
+  operatorId     String?
+  timestamp      DateTime
+  createdAt      DateTime               @default(now())
+  incident       Incident               @relation(fields: [incidentId], references: [id])
+  helpRequest    HelpRequest?           @relation(fields: [helpRequestId], references: [id])
+  operator       User?                  @relation("CommunicationOperator", fields: [operatorId], references: [id])
+
+  @@index([incidentId, helpRequestId, timestamp])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  action      String
+  entityType  String
+  entityId    String
+  before      Json?
+  after       Json?
+  reason      String?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}

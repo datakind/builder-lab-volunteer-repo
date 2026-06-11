@@ -1,0 +1,3204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Disaster Evacuation Control Tower | CODEX 2026 DEMO PROTOTYPE</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef3f1;
+      --surface: #ffffff;
+      --surface-2: #f7faf8;
+      --ink: #16201c;
+      --muted: #65736d;
+      --line: #dbe5df;
+      --blue: #0b6bcb;
+      --teal: #00777a;
+      --green: #23834b;
+      --amber: #b26b00;
+      --red: #bd2c2c;
+      --violet: #6e4aa8;
+      --shadow: 0 10px 24px rgba(22, 32, 28, 0.08);
+      --font-ui: Arial, Helvetica, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-ui);
+    }
+
+    button,
+    input,
+    select,
+    textarea,
+    table,
+    svg text {
+      font-family: var(--font-ui);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      background: var(--teal);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 0.65rem 0.85rem;
+    }
+
+    button:hover {
+      background: #005f62;
+    }
+
+    button.secondary {
+      background: #e6eeea;
+      color: var(--ink);
+    }
+
+    button.danger {
+      background: var(--red);
+    }
+
+    button:disabled {
+      background: #aab7b1;
+      cursor: not-allowed;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0.62rem;
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    label {
+      display: grid;
+      gap: 0.35rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .app {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-inner {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 1rem;
+      width: min(1440px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 1rem 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .mark {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border-radius: 8px;
+      background: #d7eeed;
+      color: var(--teal);
+      font-size: 1.35rem;
+      font-weight: 900;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .brand p,
+    .eyebrow {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .status-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      gap: 1rem;
+      width: min(1440px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 1rem 0 2rem;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 84px;
+      align-self: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 0.55rem;
+    }
+
+    .persona-tabs {
+      display: flex;
+      gap: 0.12rem;
+      margin-bottom: 0.65rem;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #f7faf8;
+      padding: 0.14rem;
+    }
+
+    .persona-tab {
+      flex: 1;
+      min-height: 28px;
+      border-radius: 3px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.67rem;
+      line-height: 1.05;
+      padding: 0.25rem 0.18rem;
+    }
+
+    .persona-tab:hover {
+      background: #e6eeea;
+      color: var(--ink);
+    }
+
+    .persona-tab.active {
+      background: var(--teal);
+      box-shadow: none;
+      color: #ffffff;
+    }
+
+    .nav-button {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      min-height: 34px;
+      margin-bottom: 0.08rem;
+      border-radius: 3px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 0.82rem;
+      text-align: left;
+      padding: 0.44rem 0.52rem 0.44rem 0.72rem;
+    }
+
+    .nav-button[hidden] {
+      display: none;
+    }
+
+    .nav-button:hover {
+      background: #f4f8f6;
+      color: var(--teal);
+    }
+
+    .nav-button.active {
+      background: transparent;
+      color: var(--teal);
+    }
+
+    .nav-button.active::before {
+      content: "";
+      position: absolute;
+      left: 0.28rem;
+      top: 0.45rem;
+      bottom: 0.45rem;
+      width: 3px;
+      border-radius: 999px;
+      background: var(--teal);
+    }
+
+    .main {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .section-head h2 {
+      margin: 0.15rem 0 0;
+      font-size: 1.55rem;
+    }
+
+    .panel,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 1rem;
+    }
+
+    .panel h3,
+    .card h3 {
+      margin: 0 0 0.8rem;
+      font-size: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .metric {
+      display: grid;
+      gap: 0.25rem;
+      min-height: 96px;
+      padding: 1rem;
+    }
+
+    .metric .value {
+      font-size: 2.25rem;
+      font-weight: 900;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr) 42px;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .bar-track {
+      height: 16px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e7efeb;
+    }
+
+    .bar-fill {
+      height: 100%;
+      min-width: 3px;
+      border-radius: inherit;
+    }
+
+    .bar-fill.red { background: var(--red); }
+    .bar-fill.yellow { background: var(--amber); }
+    .bar-fill.green { background: var(--green); }
+
+    .bar-row strong {
+      font-size: 0.86rem;
+    }
+
+    .bar-row span {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .case-progress {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .case-progress-main {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .case-progress-label {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .case-progress-track {
+      height: 18px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #dfe7e2;
+    }
+
+    .case-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), var(--teal));
+    }
+
+    .case-progress strong {
+      font-size: 1.4rem;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .metric .hint {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .metric.critical { border-left: 5px solid var(--red); }
+    .metric.high { border-left: 5px solid var(--amber); }
+    .metric.good { border-left: 5px solid var(--green); }
+    .metric.info { border-left: 5px solid var(--blue); }
+    .metric.alert { border-left: 5px solid var(--violet); }
+
+    .map-panel {
+      position: relative;
+      isolation: isolate;
+      min-height: 430px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(236, 243, 239, 0.98), rgba(216, 232, 228, 0.96)),
+        repeating-linear-gradient(0deg, rgba(82, 112, 101, 0.08) 0, rgba(82, 112, 101, 0.08) 1px, transparent 1px, transparent 36px),
+        repeating-linear-gradient(90deg, rgba(82, 112, 101, 0.07) 0, rgba(82, 112, 101, 0.07) 1px, transparent 1px, transparent 36px);
+    }
+
+    .river {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.42), transparent 58%);
+      opacity: 0.8;
+    }
+
+    .base-map-svg {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .map-water {
+      fill: none;
+      stroke: #8fc7dc;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 4.2;
+    }
+
+    .map-canal {
+      fill: none;
+      stroke: #b7d8e4;
+      stroke-linecap: round;
+      stroke-width: 1.3;
+    }
+
+    .map-road {
+      fill: none;
+      stroke: #ffffff;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2.1;
+      filter: drop-shadow(0 0.8px 0 rgba(120, 130, 124, 0.38));
+    }
+
+    .map-road.major {
+      stroke: #fff5d2;
+      stroke-width: 3.4;
+    }
+
+    .map-rail {
+      fill: none;
+      stroke: #6d7672;
+      stroke-dasharray: 1 1.2;
+      stroke-linecap: round;
+      stroke-width: 0.9;
+      opacity: 0.75;
+    }
+
+    .map-zone {
+      fill: rgba(0, 119, 122, 0.045);
+      stroke: rgba(0, 119, 122, 0.16);
+      stroke-width: 0.4;
+    }
+
+    .map-label-text {
+      fill: rgba(22, 32, 28, 0.58);
+      font-size: 3.2px;
+      font-weight: 800;
+      paint-order: stroke;
+      stroke: rgba(255, 255, 255, 0.82);
+      stroke-width: 1.2px;
+    }
+
+    .route-svg {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .route-svg:has(.route-boat:hover) {
+      z-index: 10;
+    }
+
+    .route-shadow {
+      fill: none;
+      stroke: rgba(22, 32, 28, 0.18);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.5;
+      pointer-events: none;
+    }
+
+    .route-line {
+      fill: none;
+      stroke: var(--blue);
+      stroke-dasharray: 4 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 0.75;
+      pointer-events: none;
+    }
+
+    .route-boat {
+      filter: drop-shadow(0 1.5px 2px rgba(11, 107, 203, 0.42));
+      cursor: default;
+      pointer-events: all;
+    }
+
+    .route-boat.lost-signal {
+      opacity: 1;
+      filter: drop-shadow(0 1.5px 2px rgba(189, 44, 44, 0.38));
+    }
+
+    .lost-signal-alert {
+      animation: lostSignalBlink 0.85s ease-in-out infinite;
+      fill: var(--red);
+      stroke: #ffffff;
+      stroke-width: 0.55;
+    }
+
+    .lost-signal-alert-text {
+      fill: #ffffff;
+      font-size: 4px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: central;
+      animation: lostSignalBlink 0.85s ease-in-out infinite;
+    }
+
+    @keyframes lostSignalBlink {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.2;
+      }
+    }
+
+    .map-point {
+      position: absolute;
+      display: grid;
+      width: 18px;
+      height: 18px;
+      place-items: center;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 4px 12px rgba(22, 32, 28, 0.18);
+      color: var(--ink);
+      font-size: 0.72rem;
+      font-weight: 700;
+      z-index: 4;
+    }
+
+    .map-point::before {
+      content: "";
+      display: none;
+    }
+
+    .map-point.request { background: var(--red); }
+    .map-point.boat { background: var(--blue); }
+    .map-point.shelter {
+      width: 28px;
+      height: 28px;
+      border: 2px solid rgba(255, 255, 255, 0.96);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 5px 14px rgba(22, 32, 28, 0.22), 0 0 0 3px rgba(0, 92, 53, 0.16);
+      color: #005c35;
+      font-size: 1.45rem;
+      line-height: 1;
+      text-shadow: 0 1px 0 #ffffff;
+    }
+    .map-point.base { background: var(--amber); }
+
+    .map-point:hover {
+      z-index: 520;
+    }
+
+    .map-label {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      min-width: max-content;
+      max-width: 190px;
+      transform: translateX(-50%) translateY(4px);
+      border: 1px solid rgba(22, 32, 28, 0.12);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 8px 18px rgba(22, 32, 28, 0.14);
+      opacity: 0;
+      pointer-events: none;
+      padding: 0.38rem 0.48rem;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      white-space: normal;
+    }
+
+    .map-label strong,
+    .map-label span {
+      display: block;
+    }
+
+    .map-label span {
+      color: var(--muted);
+      font-size: 0.7rem;
+      margin-top: 0.12rem;
+    }
+
+    .map-point:hover .map-label {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .boat-hover-tooltip {
+      position: fixed;
+      z-index: 9999;
+      display: none;
+      width: 260px;
+      border: 1px solid rgba(22, 32, 28, 0.18);
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 10px 22px rgba(22, 32, 28, 0.18);
+      color: var(--ink);
+      font-size: 0.78rem;
+      line-height: 1.35;
+      pointer-events: none;
+      padding: 0.5rem 0.55rem;
+    }
+
+    .boat-hover-tooltip.show {
+      display: block;
+    }
+
+    .boat-hover-tooltip strong,
+    .boat-hover-tooltip span {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .boat-hover-tooltip strong {
+      font-weight: 800;
+    }
+
+    .boat-hover-tooltip span {
+      color: #65736d;
+      font-weight: 700;
+      margin-top: 0.12rem;
+    }
+
+    .case-dot {
+      position: absolute;
+      z-index: 3;
+      width: 8px;
+      height: 8px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 0 2px rgba(178, 107, 0, 0.14);
+    }
+
+    .case-dot.critical {
+      width: 12px;
+      height: 12px;
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(189, 44, 44, 0.16);
+    }
+
+    .case-dot.high {
+      width: 10px;
+      height: 10px;
+      background: var(--amber);
+    }
+
+    .case-dot.medium { background: var(--blue); }
+    .case-dot.low { background: var(--green); }
+
+    .boat-sprite {
+      position: absolute;
+      z-index: 6;
+      display: grid;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      transform: translate(-50%, -50%);
+      cursor: default;
+      filter: drop-shadow(0 5px 8px rgba(22, 32, 28, 0.18));
+    }
+
+    .boat-sprite svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .boat-sprite.offline,
+    .boat-sprite.unsafe {
+      opacity: 0.58;
+    }
+
+    .boat-wake {
+      position: absolute;
+      right: 22px;
+      width: 18px;
+      height: 8px;
+      border-top: 2px solid rgba(11, 107, 203, 0.28);
+      border-bottom: 2px solid rgba(11, 107, 203, 0.18);
+      border-radius: 50%;
+      animation: wakePulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes wakePulse {
+      0%, 100% { opacity: 0.25; transform: scaleX(0.8); }
+      50% { opacity: 0.75; transform: scaleX(1.2); }
+    }
+
+    .map-legend {
+      position: absolute;
+      right: 0.8rem;
+      bottom: 0.8rem;
+      z-index: 8;
+      display: grid;
+      gap: 0.36rem;
+      max-width: min(420px, calc(100% - 1.6rem));
+      border: 1px solid rgba(22, 32, 28, 0.12);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 8px 18px rgba(22, 32, 28, 0.12);
+      padding: 0.45rem 0.5rem;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .legend-title {
+      min-width: 76px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.24rem;
+      color: var(--ink);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    .legend-dot.critical { background: var(--red); }
+    .legend-dot.high { background: var(--amber); }
+    .legend-dot.low { background: var(--green); }
+    .legend-dot.boat { background: var(--blue); }
+    .legend-dot.shelter { background: var(--green); }
+    .legend-dot.base { background: var(--amber); }
+
+    .legend-line {
+      width: 24px;
+      border-top: 2px dashed var(--blue);
+    }
+
+    .legend-boat-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--blue);
+    }
+
+    .legend-star {
+      color: #005c35;
+      font-size: 1.08rem;
+      line-height: 1;
+      text-shadow: 0 1px 0 #ffffff;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--ink);
+      font-size: 0.86rem;
+      font-weight: 700;
+      padding: 0.5rem;
+    }
+
+    .check input {
+      width: auto;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 0.7rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.76rem;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    tr:hover td {
+      background: #fbfdfc;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      background: #edf2f0;
+      color: var(--ink);
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.18rem 0.55rem;
+      white-space: nowrap;
+    }
+
+    .badge.critical,
+    .badge.sos,
+    .badge.unsafe {
+      background: #ffe2e2;
+      color: var(--red);
+    }
+
+    .badge.high,
+    .badge.warning {
+      background: #fff0d8;
+      color: var(--amber);
+    }
+
+    .badge.medium,
+    .badge.assigned,
+    .badge.onway,
+    .badge.inuse {
+      background: #e5efff;
+      color: var(--blue);
+    }
+
+    .badge.low,
+    .badge.open,
+    .badge.available,
+    .badge.completed,
+    .badge.normal {
+      background: #dff2e7;
+      color: var(--green);
+    }
+
+    .badge.offline,
+    .badge.unknown,
+    .badge.closed {
+      background: #e7e9eb;
+      color: #59635e;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+      gap: 1rem;
+    }
+
+    .stack {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 0.82rem;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 0.65rem;
+      max-height: 540px;
+      overflow: auto;
+      padding-right: 0.3rem;
+    }
+
+    .timeline-item {
+      display: grid;
+      gap: 0.2rem;
+      border-left: 3px solid var(--teal);
+      background: var(--surface-2);
+      padding: 0.6rem 0.7rem;
+    }
+
+    .timeline-item strong {
+      font-size: 0.88rem;
+    }
+
+    .timeline-item span {
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .mission-stops {
+      display: grid;
+      gap: 0.42rem;
+      margin-top: 0.65rem;
+    }
+
+    .mission-stop {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 0.5rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fbfa;
+      padding: 0.55rem 0.6rem;
+    }
+
+    .mission-stop.done {
+      border-color: rgba(35, 131, 75, 0.24);
+      background: #ecf8f1;
+    }
+
+    .mission-stop.current {
+      border-color: rgba(11, 107, 203, 0.28);
+      background: #eef6ff;
+    }
+
+    .stop-marker-svg {
+      display: block;
+      width: 24px;
+      height: 24px;
+      align-self: start;
+      margin-top: 0.06rem;
+      overflow: visible;
+    }
+
+    .stop-marker-svg text {
+      fill: #ffffff;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .stop-marker-svg.pending text {
+      fill: #65736d;
+    }
+
+    .mission-stop strong,
+    .mission-stop span {
+      display: block;
+    }
+
+    .mission-stop span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 0.1rem;
+    }
+
+    .stop-control {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.6rem;
+      margin-top: 0.65rem;
+    }
+
+    .dispatch-list {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .boat-option {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.8rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 0.8rem;
+    }
+
+    .boat-option.ineligible {
+      background: #fff8f7;
+      border-color: #f2cccc;
+    }
+
+    .route-card {
+      border-left-width: 5px;
+    }
+
+    .route-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .route-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--route-color, var(--blue));
+    }
+
+    .route-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      padding: 0.12rem 0.45rem;
+      text-transform: uppercase;
+    }
+
+    .route-status.on-time {
+      background: #dff2e7;
+      color: var(--green);
+    }
+
+    .route-status.delay {
+      background: #fff0d8;
+      color: var(--amber);
+    }
+
+    .route-status.lost-signal {
+      background: #ffe2e2;
+      color: var(--red);
+    }
+
+    .public-card {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .public-layout {
+      display: grid;
+      grid-template-columns: minmax(360px, 1.1fr) minmax(320px, 0.75fr);
+      gap: 1rem;
+      align-items: start;
+      max-width: 1180px;
+    }
+
+    .public-update-card {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .public-update-card label {
+      gap: 0.45rem;
+    }
+
+    .public-update-card textarea {
+      min-height: 112px;
+    }
+
+    .progress-message {
+      border-left: 4px solid var(--teal);
+      background: #e8f5f3;
+      padding: 0.85rem;
+    }
+
+    .public-result {
+      display: grid;
+      gap: 0.9rem;
+      margin-top: 0.2rem;
+    }
+
+    .public-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      padding-top: 0.05rem;
+    }
+
+    .toast {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 40;
+      display: none;
+      max-width: min(420px, calc(100% - 2rem));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 0.9rem;
+      font-weight: 700;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    @media (max-width: 1100px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .nav-button {
+        margin: 0;
+      }
+
+      .span-3,
+      .span-4,
+      .span-5,
+      .span-6,
+      .span-7,
+      .span-8 {
+        grid-column: span 12;
+      }
+
+      .split,
+      .public-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner,
+      .section-head,
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .status-strip {
+        justify-content: flex-start;
+      }
+
+      .sidebar,
+      .form-grid,
+      .checkbox-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="mark">DE</div>
+          <div>
+            <p>CODEX 2026 DEMO PROTOTYPE</p>
+            <h1>Disaster Evacuation Control Tower</h1>
+          </div>
+        </div>
+        <div class="status-strip">
+          <span class="badge open">Hat Yai flood response</span>
+          <span class="badge warning">Mock data only</span>
+          <span class="badge medium">Thailand local time</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell">
+      <nav class="sidebar" aria-label="Demo sections">
+        <div class="persona-tabs" role="tablist" aria-label="Demo perspective">
+          <button class="persona-tab active" data-nav-group="center" type="button">Control Tower</button>
+          <button class="persona-tab" data-nav-group="helper" type="button">Rescue Team</button>
+          <button class="persona-tab" data-nav-group="victim" type="button">Affected Person</button>
+        </div>
+        <button class="nav-button active" data-group="center" data-view="dashboard">Command Dashboard</button>
+        <button class="nav-button" data-group="center" data-view="verification">Verification Queue <span id="nav-queue">0</span></button>
+        <button class="nav-button" data-group="center" data-view="dispatch">Manual Dispatch <span id="nav-dispatch">0</span></button>
+        <button class="nav-button" data-group="helper" data-view="fleet" hidden>Boats & Safety</button>
+        <button class="nav-button" data-group="helper" data-view="missions" hidden>Mission Status</button>
+        <button class="nav-button" data-group="victim" data-view="intake" hidden>Help Request Intake</button>
+        <button class="nav-button" data-group="victim" data-view="public" hidden>Public Tracking</button>
+      </nav>
+
+      <main class="main">
+        <section id="dashboard" class="view active">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Command dashboard</p>
+              <h2>Area operations overview</h2>
+            </div>
+            <div class="toolbar">
+              <label>Province
+                <select id="provinceSelect"></select>
+              </label>
+              <label>District
+                <select id="districtSelect"></select>
+              </label>
+              <label>Tambon
+                <select id="tambonSelect"></select>
+              </label>
+            </div>
+          </div>
+          <div id="dashboardMetrics" class="grid"></div>
+          <div id="caseProgress"></div>
+          <div class="grid">
+            <article class="panel span-8 map-panel">
+              <div class="river" aria-hidden="true"></div>
+              <div id="opsMap"></div>
+            </article>
+            <article class="panel span-4">
+              <h3>Boats In Use</h3>
+              <div id="routeList" class="stack"></div>
+            </article>
+            <article class="panel span-4">
+              <h3>Cases By Severity</h3>
+              <div id="priorityBars" class="bar-list"></div>
+            </article>
+            <article class="panel span-8">
+              <h3>Urgency Signals</h3>
+              <div id="urgencyList" class="stack"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="intake" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Help request intake</p>
+              <h2>Create a sample request</h2>
+            </div>
+            <button id="fillCriticalSample" class="secondary">Load roof rescue sample</button>
+          </div>
+          <article class="panel">
+            <form id="requestForm" class="stack">
+              <div class="form-grid">
+                <label>Requester name
+                  <input name="requesterName" value="Malee Srisuk">
+                </label>
+                <label>Contact phone
+                  <input name="phone" value="+66 81 234 5521">
+                </label>
+                <label>People count
+                  <input name="peopleCount" type="number" min="1" value="3">
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>Tambon
+                  <select name="areaId" id="intakeArea"></select>
+                </label>
+                <label>Address
+                  <input name="address" value="Soi 3 Khlong Hae, Hat Yai, near Khlong U Taphao">
+                </label>
+                <label>Landmark or directions
+                  <input name="landmark" value="Blue roof house behind Khlong Hae floating market road">
+                </label>
+                <label>Tracking code
+                  <input name="trackingCode" id="trackingCodeInput" readonly>
+                </label>
+              </div>
+              <div class="checkbox-grid">
+                <label class="check"><input type="checkbox" name="cannotSelfRescue" checked> Cannot self-rescue</label>
+                <label class="check"><input type="checkbox" name="medicalEmergency"> Medical emergency</label>
+                <label class="check"><input type="checkbox" name="waterRising" checked> Water rising</label>
+                <label class="check"><input type="checkbox" name="elderly"> Elderly</label>
+                <label class="check"><input type="checkbox" name="disabled"> Disabled</label>
+                <label class="check"><input type="checkbox" name="child" checked> Child</label>
+                <label class="check"><input type="checkbox" name="pregnant"> Pregnant</label>
+                <label class="check"><input type="checkbox" name="bedridden"> Bedridden</label>
+              </div>
+              <button type="submit">Create request</button>
+            </form>
+          </article>
+          <article class="panel">
+            <h3>Recently Created</h3>
+            <div id="recentRequests" class="table-wrap"></div>
+          </article>
+        </section>
+
+        <section id="verification" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Verification queue</p>
+              <h2>Review unverified requests and public updates</h2>
+            </div>
+          </div>
+          <article class="panel">
+            <h3>Requests Needing Review</h3>
+            <div id="verificationQueue" class="stack"></div>
+          </article>
+        </section>
+
+        <section id="fleet" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Boats, drivers, safety</p>
+              <h2>Fleet readiness</h2>
+            </div>
+          </div>
+          <article class="panel">
+            <div id="fleetTable" class="table-wrap"></div>
+          </article>
+        </section>
+
+        <section id="dispatch" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Manual dispatch planner</p>
+              <h2>Human-approved assignment</h2>
+            </div>
+          </div>
+          <div id="dispatchSummary" class="grid"></div>
+          <div class="split">
+            <article class="panel">
+              <h3>Select verified request</h3>
+              <label>Request
+                <select id="dispatchRequestSelect"></select>
+              </label>
+              <div id="dispatchRequestSummary" class="stack" style="margin-top: 0.8rem;"></div>
+            </article>
+            <article class="panel">
+              <h3>Shelter destination</h3>
+              <label>Shelter
+                <select id="dispatchShelterSelect"></select>
+              </label>
+              <div id="shelterWarning" style="margin-top: 0.8rem;"></div>
+            </article>
+          </div>
+          <article class="panel">
+            <h3>Boat Eligibility</h3>
+            <div id="boatEligibility" class="dispatch-list"></div>
+          </article>
+        </section>
+
+        <section id="missions" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Mission status</p>
+              <h2>Update rescue progress</h2>
+            </div>
+          </div>
+          <article class="panel">
+            <div id="missionList" class="stack"></div>
+          </article>
+        </section>
+
+        <section id="public" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Public tracking view</p>
+              <h2>Privacy-safe request status</h2>
+            </div>
+          </div>
+          <div class="public-layout">
+            <article class="panel public-card">
+              <h3>Find request</h3>
+              <label>Tracking code
+                <input id="publicTrackingInput">
+              </label>
+              <button id="publicLookup">View status</button>
+              <div id="publicResult"></div>
+            </article>
+            <article class="panel public-update-card">
+              <h3>Submit emergency update</h3>
+              <label>Update type
+                <select id="publicUpdateType">
+                  <option value="water_rising">Water rising</option>
+                  <option value="medical_condition_worse">Medical condition worse</option>
+                  <option value="moved_location">Moved location</option>
+                  <option value="no_longer_need_help">No longer need help</option>
+                </select>
+              </label>
+              <label>Message
+                <textarea id="publicUpdateMessage">Water is now at chest level near the front door.</textarea>
+              </label>
+              <button id="submitPublicUpdate">Submit update</button>
+              <p class="muted small">Updates are queued for verifier or dispatcher review. Internal details are never shown here.</p>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const state = {
+      selectedArea: { provinceId: "songkhla", districtId: "hat-yai", tambonId: "all" },
+      activePublicTrackingCode: "",
+      areas: {
+        provinces: [{ id: "songkhla", name: "Songkhla" }],
+        districts: [{ id: "hat-yai", provinceId: "songkhla", name: "Hat Yai" }],
+        tambons: [
+          { id: "khlong-hae", districtId: "hat-yai", name: "Khlong Hae" },
+          { id: "kho-hong", districtId: "hat-yai", name: "Kho Hong" },
+          { id: "khuan-lang", districtId: "hat-yai", name: "Khuan Lang" }
+        ]
+      },
+      shelters: [
+        {
+          id: "shelter-school",
+          areaId: "khlong-hae",
+          name: "Khlong Hae Municipal School Shelter",
+          status: "open",
+          occupancy: 72,
+          capacity: 120,
+          accessibility: true,
+          medicalSupport: true,
+          x: 73,
+          y: 28
+        },
+        {
+          id: "shelter-gym",
+          areaId: "kho-hong",
+          name: "Prince of Songkla Gym Shelter",
+          status: "full",
+          occupancy: 80,
+          capacity: 80,
+          accessibility: false,
+          medicalSupport: false,
+          x: 58,
+          y: 72
+        }
+      ],
+      bases: [
+        { id: "base-1", areaId: "khlong-hae", type: "base", name: "Khlong Hae Boat Base", status: "open", x: 18, y: 72 },
+        { id: "stage-0", areaId: "khlong-hae", type: "staging_area", name: "Hat Yai Forward Staging Point", status: "open", x: 33, y: 64 },
+        { id: "stage-1", areaId: "kho-hong", type: "staging_area", name: "Kho Hong Staging Area", status: "limited", x: 63, y: 56 }
+      ],
+      boats: [
+        {
+          id: "boat-01",
+          name: "Boat 01",
+          areaId: "khlong-hae",
+          team: "Hat Yai Volunteer Boat Team 1",
+          driver: "Somchai K.",
+          driverPhone: "+66 81 772 4501",
+          location: "Khlong Hae Boat Base",
+          maxPeople: 10,
+          status: "in_use",
+          safety: "normal",
+          lastUpdate: minutesAgo(6),
+          x: 21,
+          y: 72
+        },
+        {
+          id: "boat-02",
+          name: "Boat 02",
+          areaId: "khlong-hae",
+          team: "NGO Rescue Unit B",
+          driver: "Narin P.",
+          driverPhone: "+66 89 550 2188",
+          location: "Khlong Hae canal checkpoint",
+          maxPeople: 4,
+          status: "in_use",
+          safety: "normal",
+          lastUpdate: minutesAgo(18),
+          x: 44,
+          y: 55
+        },
+        {
+          id: "boat-03",
+          name: "Boat 03",
+          areaId: "kho-hong",
+          team: "Local Admin Boat Crew",
+          driver: "Pranee S.",
+          driverPhone: "+66 92 314 8802",
+          location: "Lost signal near Kho Hong market pier",
+          maxPeople: 8,
+          status: "in_use",
+          safety: "unknown",
+          lastUpdate: minutesAgo(96),
+          x: 64,
+          y: 48
+        },
+        {
+          id: "boat-04",
+          name: "Boat 04",
+          areaId: "khuan-lang",
+          team: "Volunteer Boat Team 4",
+          driver: "Anan T.",
+          driverPhone: "+66 86 901 4430",
+          location: "Khuan Lang bridge",
+          maxPeople: 5,
+          status: "available",
+          safety: "normal",
+          lastUpdate: minutesAgo(9),
+          x: 77,
+          y: 68
+        },
+        {
+          id: "boat-05",
+          name: "Boat 05",
+          areaId: "khlong-hae",
+          team: "Hat Yai Volunteer Boat Team 5",
+          driver: "Krit M.",
+          driverPhone: "+66 88 219 7741",
+          location: "Khlong Hae municipal shelter dock",
+          maxPeople: 6,
+          status: "available",
+          safety: "normal",
+          lastUpdate: minutesAgo(11),
+          x: 69,
+          y: 31
+        },
+        {
+          id: "boat-06",
+          name: "Boat 06",
+          areaId: "kho-hong",
+          team: "NGO Rescue Unit C",
+          driver: "Patchara W.",
+          driverPhone: "+66 91 404 6205",
+          location: "PSU gym shelter entrance",
+          maxPeople: 5,
+          status: "available",
+          safety: "normal",
+          lastUpdate: minutesAgo(7),
+          x: 58,
+          y: 72
+        },
+        {
+          id: "boat-07",
+          name: "Boat 07",
+          areaId: "khuan-lang",
+          team: "Khuan Lang Local Rescue",
+          driver: "Wichai R.",
+          driverPhone: "+66 82 771 0904",
+          location: "Khuan Lang staging road",
+          maxPeople: 7,
+          status: "available",
+          safety: "normal",
+          lastUpdate: minutesAgo(14),
+          x: 42,
+          y: 82
+        }
+      ],
+      requests: [
+        {
+          id: "req-1001",
+          trackingCode: "FR-7K2Q-91",
+          areaId: "khlong-hae",
+          status: "in_progress",
+          verified: true,
+          requesterName: "Malee Srisuk",
+          contactPhone: "+66 82 441 9012",
+          peopleCount: 4,
+          cannotSelfRescue: true,
+          medicalEmergency: true,
+          waterRising: true,
+          elderly: true,
+          disabled: false,
+          child: true,
+          pregnant: false,
+          bedridden: false,
+          address: "Soi 3 Khlong Hae, Hat Yai, canal-side houses",
+          landmark: "Green two-storey house near floating market road",
+          createdAt: minutesAgo(142),
+          priority: null,
+          assignedBoatId: "boat-01",
+          missionId: "mission-001",
+          x: 48,
+          y: 34
+        },
+        {
+          id: "req-1002",
+          trackingCode: "FR-4M8A-22",
+          areaId: "khlong-hae",
+          status: "in_progress",
+          verified: true,
+          requesterName: "Nok Chaiya",
+          contactPhone: "+66 89 320 8814",
+          peopleCount: 2,
+          cannotSelfRescue: true,
+          medicalEmergency: false,
+          waterRising: true,
+          elderly: false,
+          disabled: true,
+          child: false,
+          pregnant: false,
+          bedridden: false,
+          address: "Soi Phetkasem 21, Khlong Hae",
+          landmark: "Behind the health volunteer office near Khlong Hae canal",
+          createdAt: minutesAgo(51),
+          priority: null,
+          assignedBoatId: "boat-02",
+          missionId: "mission-002",
+          x: 61,
+          y: 42
+        },
+        {
+          id: "req-1003",
+          trackingCode: "FR-8H6P-44",
+          areaId: "kho-hong",
+          status: "in_progress",
+          verified: true,
+          requesterName: "Arun Sae-tan",
+          contactPhone: "+66 80 113 2098",
+          peopleCount: 7,
+          cannotSelfRescue: false,
+          medicalEmergency: false,
+          waterRising: false,
+          elderly: false,
+          disabled: false,
+          child: true,
+          pregnant: false,
+          bedridden: false,
+          address: "Kho Hong community hall road",
+          landmark: "Near PSU back gate bus stop",
+          createdAt: minutesAgo(220),
+          priority: null,
+          assignedBoatId: "boat-03",
+          missionId: "mission-003",
+          x: 80,
+          y: 58
+        },
+        {
+          id: "req-1004",
+          trackingCode: "FR-M4CN-18",
+          areaId: "khlong-hae",
+          status: "in_progress",
+          verified: true,
+          requesterName: "Suda K.",
+          contactPhone: "+66 81 783 9981",
+          peopleCount: 2,
+          cannotSelfRescue: true,
+          medicalEmergency: false,
+          waterRising: true,
+          elderly: false,
+          disabled: false,
+          child: true,
+          pregnant: false,
+          bedridden: false,
+          address: "Behind health volunteer office, Khlong Hae",
+          landmark: "Second floor above the community clinic",
+          createdAt: minutesAgo(76),
+          priority: null,
+          assignedBoatId: "boat-02",
+          missionId: "mission-002",
+          x: 56,
+          y: 44
+        },
+        {
+          id: "req-1005",
+          trackingCode: "FR-RJ9W-27",
+          areaId: "khlong-hae",
+          status: "in_progress",
+          verified: true,
+          requesterName: "Rujira W.",
+          contactPhone: "+66 82 904 7716",
+          peopleCount: 2,
+          cannotSelfRescue: true,
+          medicalEmergency: false,
+          waterRising: true,
+          elderly: true,
+          disabled: false,
+          child: false,
+          pregnant: false,
+          bedridden: false,
+          address: "Khlong Hae floating market back lane",
+          landmark: "Wooden house beside the canal walkway",
+          createdAt: minutesAgo(64),
+          priority: null,
+          assignedBoatId: "boat-01",
+          missionId: "mission-001",
+          x: 52,
+          y: 34
+        },
+        {
+          id: "req-1006",
+          trackingCode: "FR-RP4A-63",
+          areaId: "khlong-hae",
+          status: "in_progress",
+          verified: true,
+          requesterName: "Rujapa W.",
+          contactPhone: "+66 84 226 5190",
+          peopleCount: 2,
+          cannotSelfRescue: true,
+          medicalEmergency: false,
+          waterRising: true,
+          elderly: false,
+          disabled: false,
+          child: false,
+          pregnant: false,
+          bedridden: false,
+          address: "Khlong Hae canal footbridge lane",
+          landmark: "Small grocery shop beside the footbridge",
+          createdAt: minutesAgo(58),
+          priority: null,
+          assignedBoatId: "boat-01",
+          missionId: "mission-001",
+          x: 49,
+          y: 39
+        }
+      ],
+      missions: [
+        {
+          id: "mission-001",
+          requestId: "req-1001",
+          boatId: "boat-01",
+          shelterId: "shelter-school",
+          status: "on_way",
+          etaMin: 18,
+          etaMax: 48,
+          etaPickup: 18,
+          etaShelter: 48,
+          pickupAt: addMinutes(18),
+          shelterAt: addMinutes(48),
+          completeAt: addMinutes(48),
+          delayReason: "Moving through flooded canal-side road; route still passable",
+          createdAt: minutesAgo(12),
+          stops: [
+            {
+              id: "stop-1",
+              type: "pickup",
+              label: "Pickup 1 - Malee Srisuk",
+              person: "Malee Srisuk",
+              code: "FR-7K2Q-91",
+              location: "Soi 3 Khlong Hae canal-side houses",
+              people: 4,
+              etaMinutes: 8,
+              status: "done"
+            },
+            {
+              id: "stop-2",
+              type: "pickup",
+              label: "Pickup 2 - Rujapa W.",
+              person: "Rujapa W.",
+              code: "FR-RP4A-63",
+              location: "Khlong Hae canal footbridge lane",
+              people: 2,
+              etaMinutes: 18,
+              status: "current"
+            },
+            {
+              id: "stop-3",
+              type: "pickup",
+              label: "Pickup 3 - Rujira W.",
+              person: "Rujira W.",
+              code: "FR-RJ9W-27",
+              location: "Khlong Hae floating market back lane",
+              people: 2,
+              etaMinutes: 28,
+              status: "pending"
+            },
+            {
+              id: "stop-4",
+              type: "shelter",
+              label: "Shelter - Khlong Hae Municipal School",
+              code: "SHELTER",
+              location: "Khlong Hae Municipal School Shelter",
+              people: 0,
+              etaMinutes: 48,
+              status: "pending"
+            }
+          ]
+        },
+        {
+          id: "mission-002",
+          requestId: "req-1004",
+          boatId: "boat-02",
+          shelterId: "shelter-school",
+          status: "on_way",
+          etaMin: 14,
+          etaMax: 38,
+          etaPickup: 14,
+          etaShelter: 38,
+          pickupAt: addMinutes(14),
+          shelterAt: addMinutes(38),
+          completeAt: addMinutes(38),
+          delayReason: "Short delay at narrow flooded lane near Phetkasem 21",
+          createdAt: minutesAgo(18),
+          stops: [
+            {
+              id: "mission-002-stop-1",
+              type: "pickup",
+              label: "Pickup 1 - Suda K.",
+              person: "Suda K.",
+              code: "FR-M4CN-18",
+              location: "Behind health volunteer office",
+              people: 2,
+              etaMinutes: 10,
+              status: "current"
+            },
+            {
+              id: "mission-002-stop-2",
+              type: "pickup",
+              label: "Pickup 2 - Nok Chaiya",
+              person: "Nok Chaiya",
+              code: "FR-4M8A-22",
+              location: "Soi Phetkasem 21 second floor",
+              people: 2,
+              etaMinutes: 22,
+              status: "pending"
+            },
+            {
+              id: "mission-002-stop-3",
+              type: "shelter",
+              label: "Shelter - Khlong Hae Municipal School",
+              code: "SHELTER",
+              location: "Khlong Hae Municipal School Shelter",
+              people: 0,
+              etaMinutes: 38,
+              status: "pending"
+            }
+          ]
+        },
+        {
+          id: "mission-003",
+          requestId: "req-1003",
+          boatId: "boat-03",
+          shelterId: "shelter-school",
+          status: "on_way",
+          etaMin: 22,
+          etaMax: 48,
+          etaPickup: 22,
+          etaShelter: 48,
+          pickupAt: addMinutes(22),
+          shelterAt: addMinutes(48),
+          completeAt: addMinutes(48),
+          delayReason: "Lost signal near Kho Hong market pier; awaiting radio confirmation",
+          createdAt: minutesAgo(24),
+          stops: [
+            {
+              id: "mission-003-stop-1",
+              type: "pickup",
+              label: "Pickup 1 - Arun Sae-tan",
+              person: "Arun Sae-tan",
+              code: "FR-8H6P-44",
+              location: "Kho Hong community hall road",
+              people: 7,
+              etaMinutes: 22,
+              status: "current"
+            },
+            {
+              id: "mission-003-stop-2",
+              type: "shelter",
+              label: "Shelter - Khlong Hae Municipal School",
+              code: "SHELTER",
+              location: "Khlong Hae Municipal School Shelter",
+              people: 0,
+              etaMinutes: 48,
+              status: "pending"
+            }
+          ]
+        }
+      ],
+      events: []
+    };
+
+    const missionFlow = ["assigned", "accepted", "on_way", "arrived_pickup", "transporting", "arrived_shelter", "completed"];
+
+    function minutesAgo(minutes) {
+      return new Date(Date.now() - minutes * 60 * 1000).toISOString();
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function formatTime(iso) {
+      return new Intl.DateTimeFormat("en-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Bangkok"
+      }).format(new Date(iso));
+    }
+
+    function generateTrackingCode() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let a = "";
+      let b = "";
+      for (let i = 0; i < 4; i++) a += chars[Math.floor(Math.random() * chars.length)];
+      for (let i = 0; i < 2; i++) b += chars[Math.floor(Math.random() * chars.length)];
+      return "FR-" + a + "-" + b;
+    }
+
+    function scoreRequest(request) {
+      let score = 0;
+      const reasons = [];
+      const waitingMinutes = Math.max(0, Math.round((Date.now() - new Date(request.createdAt).getTime()) / 60000));
+
+      if (request.cannotSelfRescue) add(35, "cannot self-rescue");
+      if (request.medicalEmergency) add(35, "medical emergency");
+      if (request.waterRising) add(20, "water rising");
+      if (request.elderly) add(10, "elderly person");
+      if (request.disabled) add(10, "disabled person");
+      if (request.child) add(8, "child present");
+      if (request.pregnant) add(10, "pregnant person");
+      if (request.bedridden) add(14, "bedridden person");
+      if (waitingMinutes >= 180) add(18, "waiting over 3 hours");
+      else if (waitingMinutes >= 60) add(10, "waiting over 1 hour");
+      if (request.peopleCount >= 6) add(6, "large group");
+
+      function add(points, reason) {
+        score += points;
+        reasons.push(reason);
+      }
+
+      const band = score >= 80 ? "critical" : score >= 55 ? "high" : score >= 30 ? "medium" : "low";
+      return {
+        score,
+        band,
+        explanation: reasons.length ? capitalize(band) + " because " + reasons.join(" + ") + "." : "Low priority because no critical risk factors are present."
+      };
+    }
+
+    function capitalize(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1).replace(/_/g, " ");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value);
+    }
+
+    function addEvent(type, text, requestId) {
+      state.events.unshift({
+        id: "evt-" + Math.random().toString(16).slice(2),
+        type,
+        text,
+        requestId: requestId || null,
+        at: nowIso(),
+        reviewStatus: type === "public_update" ? "unreviewed" : "applied"
+      });
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      window.setTimeout(() => el.classList.remove("show"), 2600);
+    }
+
+    function selectedAreaIds() {
+      const selectedTambon = state.selectedArea.tambonId;
+      return selectedTambon === "all" ? state.areas.tambons.map((area) => area.id) : [selectedTambon];
+    }
+
+    function visibleRequests() {
+      const areas = selectedAreaIds();
+      return state.requests.filter((request) => areas.includes(request.areaId));
+    }
+
+    function visibleBoats() {
+      const areas = selectedAreaIds();
+      return state.boats.filter((boat) => areas.includes(boat.areaId));
+    }
+
+    function visibleShelters() {
+      const areas = selectedAreaIds();
+      return state.shelters.filter((shelter) => areas.includes(shelter.areaId));
+    }
+
+    function distanceUnits(a, b) {
+      const dx = (a.x || 50) - (b.x || 50);
+      const dy = (a.y || 50) - (b.y || 50);
+      return Math.sqrt(dx * dx + dy * dy) / 5;
+    }
+
+    function evaluateBoat(boat, request, shelter) {
+      const reasons = [];
+      const toPickup = distanceUnits(boat, request);
+      const toShelter = distanceUnits(request, shelter);
+
+      if (boat.status === "in_use") reasons.push("in use");
+      if (boat.status === "offline") reasons.push("offline");
+      if (boat.safety === "unknown") reasons.push("safety unknown");
+      if (boat.status === "unsafe" || boat.safety === "danger" || boat.safety === "sos") reasons.push("unsafe");
+      if (boat.maxPeople < request.peopleCount) reasons.push("capacity not enough");
+      if (shelter.status === "full") reasons.push("shelter full");
+      if (shelter.status === "closed") reasons.push("shelter closed");
+
+      const etaPickup = Math.max(8, Math.round(toPickup * 7));
+      const etaShelter = etaPickup + Math.max(8, Math.round(toShelter * 7));
+
+      return {
+        eligible: reasons.length === 0,
+        reasons,
+        etaPickup,
+        etaShelter,
+        etaMin: etaPickup,
+        etaMax: etaShelter
+      };
+    }
+
+    function addMinutes(minutes) {
+      return new Date(Date.now() + minutes * 60 * 1000).toISOString();
+    }
+
+    function safeRequestStatus(request) {
+      if (request.status === "new" || request.status === "needs_verification") return "Your request has been received and is being checked.";
+      if (request.status === "verified") return "Your request has been verified and is waiting for a rescue assignment.";
+      if (request.status === "assigned") return "A boat team has been assigned.";
+      if (request.status === "in_progress") return "A rescue team is moving through the mission route.";
+      if (request.status === "completed") return "This rescue mission is marked complete.";
+      return "The request status has changed. Please wait for the command center update.";
+    }
+
+    function seedBulkRequests() {
+      const addresses = [
+        "Soi 1 Khlong Hae canal road",
+        "Soi 3 near Khlong Hae floating market",
+        "Phetkasem low-lying lane",
+        "Kho Hong community road",
+        "Near PSU back gate",
+        "Khuan Lang market lane",
+        "Soi Rat Uthit flood edge",
+        "Niphat Songkhro side street",
+        "Near Hat Yai Nai drainage canal",
+        "Behind municipal pump station"
+      ];
+      const landmarks = [
+        "blue roof house",
+        "near Khlong U Taphao bridge",
+        "beside water tower",
+        "opposite community hall",
+        "behind mosque kitchen",
+        "near flooded pickup truck",
+        "yellow two-storey house",
+        "at end of narrow soi",
+        "beside rubber trees",
+        "near songthaew stop"
+      ];
+      const requesterNames = [
+        "Achara Boonmee", "Anucha Maneewong", "Busaba Laohapong", "Chaiwat Rattanakul", "Chalida Wongsuwan",
+        "Darunee Promrak", "Ekkachai Saelim", "Fahsai Keawmanee", "Ganya Thongsuk", "Hansa Yusoh",
+        "Isara Kaewkham", "Janjira Intarasak", "Kanda Phromphak", "Kittipong S.", "Lalita Chuenjai",
+        "Manop Chanthara", "Naree Chotipan", "Orasa Dechaboon", "Paitoon Lertchai", "Patcharin N.",
+        "Rachata Sae-lee", "Rattana P.", "Sakda Wongyai", "Sasithorn Phetkaew", "Siriporn D.",
+        "Somboon Yindeegul", "Sophon Laemthong", "Suchada K.", "Sukanya Y.", "Supakit Chaiyo",
+        "Tanya Saengchan", "Thanakorn P.", "Thidarat K.", "Ubolrat S.", "Vichit Pholdee",
+        "Wanida N.", "Warin Charoen", "Yada Klinhom", "Yongyut M.", "Zareena Madali",
+        "Aree Wattanakul", "Boonchai L.", "Chompoo S.", "Duangjai R.", "Ekapol T.",
+        "Fonthip J.", "Jirawat P.", "Kamolwan S.", "Lakkana R.", "Montree K.",
+        "Nattaya P.", "Orapin C.", "Pimchanok W.", "Rungnapa H.", "Santi K.",
+        "Thana S.", "Udomchai P.", "Wassana M.", "Yupa S.", "Zainab A."
+        , "Adisak P.", "Amnat W.", "Anchalee K.", "Apinya S.", "Arkom L.",
+        "Benyapa T.", "Boonmee J.", "Chalermchai R.", "Chanida P.", "Chanon M.",
+        "Duangkamol S.", "Jakkrit W.", "Jiraporn K.", "Kanokwan P.", "Kanya N.",
+        "Kawin T.", "Ketsara M.", "Kittisak R.", "Ladda S.", "Lertchai P.",
+        "Maneerat K.", "Mayuree W.", "Narumon T.", "Natthapong S.", "Nicha P.",
+        "Niran C.", "Onuma K.", "Panya R.", "Parichat S.", "Pawinee T.",
+        "Phanupong M.", "Piyawan L.", "Prasert K.", "Ratchanee S.", "Rujanee W.",
+        "Saran P.", "Sirirat K.", "Somsak L.", "Tassanee M.", "Thitima P.",
+        "Veera S.", "Wanwisa K.", "Yingluck P.", "Yuwadee R.", "Zulkipli M."
+      ];
+      const existingCodes = new Set(state.requests.map((request) => request.trackingCode));
+      let index = state.requests.length + 1;
+
+      while (state.requests.length < 100) {
+        const areaId = index % 6 === 0 ? "khuan-lang" : index % 4 === 0 ? "kho-hong" : "khlong-hae";
+        let trackingCode = generateTrackingCode();
+        while (existingCodes.has(trackingCode)) trackingCode = generateTrackingCode();
+        existingCodes.add(trackingCode);
+
+        const criticalSeed = index % 9 === 0;
+        const highSeed = index % 5 === 0;
+        const peopleCount = 1 + (index % 8);
+        const request = {
+          id: "req-" + String(1000 + index),
+          trackingCode,
+          areaId,
+          status: index % 3 === 0 ? "needs_verification" : "verified",
+          verified: index % 3 !== 0,
+          requesterName: requesterNames[index - 5] || "Hat Yai Contact " + String(index).padStart(3, "0"),
+          contactPhone: "+66 8" + String(10000000 + index * 7919).slice(0, 8),
+          peopleCount,
+          cannotSelfRescue: criticalSeed || highSeed || index % 7 === 0,
+          medicalEmergency: criticalSeed || index % 17 === 0,
+          waterRising: criticalSeed || highSeed || index % 6 === 0,
+          elderly: index % 4 === 0,
+          disabled: index % 11 === 0,
+          child: index % 3 === 0,
+          pregnant: index % 19 === 0,
+          bedridden: index % 23 === 0,
+          address: addresses[index % addresses.length] + ", " + areaName(areaId) + ", Hat Yai",
+          landmark: landmarks[index % landmarks.length],
+          createdAt: minutesAgo(20 + ((index * 13) % 360)),
+          priority: null,
+          assignedBoatId: null,
+          missionId: null,
+          x: areaId === "khlong-hae" ? 18 + ((index * 17) % 50) : areaId === "kho-hong" ? 48 + ((index * 11) % 34) : 28 + ((index * 13) % 52),
+          y: areaId === "khlong-hae" ? 18 + ((index * 23) % 58) : areaId === "kho-hong" ? 36 + ((index * 19) % 42) : 50 + ((index * 17) % 35)
+        };
+        state.requests.push(request);
+        index += 1;
+      }
+    }
+
+    function areaName(areaId) {
+      return state.areas.tambons.find((area) => area.id === areaId)?.name || "Hat Yai";
+    }
+
+    function init() {
+      seedBulkRequests();
+      state.requests.forEach((request) => {
+        request.priority = scoreRequest(request);
+        addEvent("priority", "Priority calculated for " + request.trackingCode + ": " + request.priority.band, request.id);
+      });
+      state.requests.forEach((request) => addEvent("request_created", "Request created: " + request.trackingCode, request.id));
+      addEvent("public_update", "Public update from Malee Srisuk / FR-7K2Q-91: water is rising above waist level near the stairs.", "req-1001");
+      addEvent("public_update", "Public update from Nok Chaiya / FR-4M8A-22: moved to neighbor's second floor; still needs pickup.", "req-1002");
+      addEvent("system", "Demo data loaded for Hat Yai flood response.");
+      bindNavigation();
+      bindPersonaTabs();
+      bindForms();
+      bindBoatTooltip();
+      populateAreaSelectors();
+      refreshAll();
+    }
+
+    function bindNavigation() {
+      document.querySelectorAll(".nav-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (button.hidden) return;
+          document.querySelectorAll(".nav-button").forEach((item) => item.classList.remove("active"));
+          document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+          button.classList.add("active");
+          document.getElementById(button.dataset.view).classList.add("active");
+          refreshAll();
+        });
+      });
+    }
+
+    function bindPersonaTabs() {
+      document.querySelectorAll(".persona-tab").forEach((tab) => {
+        tab.addEventListener("click", () => setPersonaTab(tab.dataset.navGroup));
+      });
+      setPersonaTab("center", { keepCurrent: true });
+    }
+
+    function setPersonaTab(group, options = {}) {
+      document.querySelectorAll(".persona-tab").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.navGroup === group);
+      });
+
+      document.querySelectorAll(".nav-button").forEach((button) => {
+        button.hidden = button.dataset.group !== group;
+      });
+
+      const activeButton = document.querySelector(".nav-button.active");
+      if (options.keepCurrent && activeButton && activeButton.dataset.group === group) return;
+
+      if (!activeButton || activeButton.hidden || activeButton.dataset.group !== group) {
+        const firstButton = document.querySelector(`.nav-button[data-group="${group}"]`);
+        if (firstButton) firstButton.click();
+      }
+    }
+
+    function bindForms() {
+      document.getElementById("trackingCodeInput").value = generateTrackingCode();
+      document.getElementById("fillCriticalSample").addEventListener("click", () => {
+        const form = document.getElementById("requestForm");
+        form.requesterName.value = "Suda Chaisuwan";
+        form.phone.value = "+66 86 552 1189";
+        form.peopleCount.value = 5;
+        form.address.value = "Soi 5 Khlong Hae, Hat Yai, flooded canal-side lane";
+        form.landmark.value = "Orange house, family waiting on second floor balcony near Khlong U Taphao";
+        form.cannotSelfRescue.checked = true;
+        form.medicalEmergency.checked = true;
+        form.waterRising.checked = true;
+        form.elderly.checked = true;
+        form.disabled.checked = false;
+        form.child.checked = true;
+        form.pregnant.checked = true;
+        form.bedridden.checked = false;
+        document.getElementById("trackingCodeInput").value = generateTrackingCode();
+      });
+
+      document.getElementById("requestForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const request = {
+          id: "req-" + Math.floor(1000 + Math.random() * 9000),
+          trackingCode: form.trackingCode.value || generateTrackingCode(),
+          areaId: form.areaId.value,
+          status: "needs_verification",
+          verified: false,
+          requesterName: form.requesterName.value,
+          contactPhone: form.phone.value,
+          peopleCount: Number(form.peopleCount.value || 1),
+          cannotSelfRescue: form.cannotSelfRescue.checked,
+          medicalEmergency: form.medicalEmergency.checked,
+          waterRising: form.waterRising.checked,
+          elderly: form.elderly.checked,
+          disabled: form.disabled.checked,
+          child: form.child.checked,
+          pregnant: form.pregnant.checked,
+          bedridden: form.bedridden.checked,
+          address: form.address.value,
+          landmark: form.landmark.value,
+          createdAt: nowIso(),
+          priority: null,
+          assignedBoatId: null,
+          missionId: null,
+          x: 35 + Math.random() * 45,
+          y: 25 + Math.random() * 38
+        };
+        request.priority = scoreRequest(request);
+        state.requests.unshift(request);
+        addEvent("request_created", "Request created from intake: " + request.trackingCode, request.id);
+        addEvent("priority", "Priority calculated for " + request.trackingCode + ": " + request.priority.explanation, request.id);
+        form.trackingCode.value = generateTrackingCode();
+        toast("Request created: " + request.trackingCode);
+        refreshAll();
+      });
+
+      document.getElementById("dispatchRequestSelect").addEventListener("change", renderDispatch);
+      document.getElementById("dispatchShelterSelect").addEventListener("change", renderDispatch);
+
+      document.getElementById("publicLookup").addEventListener("click", () => {
+        state.activePublicTrackingCode = document.getElementById("publicTrackingInput").value.trim();
+        renderPublicTracking();
+      });
+
+      document.getElementById("submitPublicUpdate").addEventListener("click", () => {
+        const code = document.getElementById("publicTrackingInput").value.trim();
+        const request = state.requests.find((item) => item.trackingCode === code);
+        if (!request) {
+          toast("Enter a valid tracking code first.");
+          return;
+        }
+        const type = document.getElementById("publicUpdateType").value;
+        const message = document.getElementById("publicUpdateMessage").value.trim();
+        addEvent("public_update", "Public update submitted: " + capitalize(type) + ". " + message, request.id);
+        toast("Emergency update sent for review.");
+        refreshAll();
+      });
+    }
+
+    function bindBoatTooltip() {
+      const tooltip = document.createElement("div");
+      tooltip.id = "boatHoverTooltip";
+      tooltip.className = "boat-hover-tooltip";
+      tooltip.setAttribute("aria-hidden", "true");
+      document.body.appendChild(tooltip);
+
+      const map = document.getElementById("opsMap");
+      map.addEventListener("mouseover", (event) => {
+        const boat = event.target.closest && event.target.closest(".route-boat, .boat-sprite");
+        if (!boat) return;
+        if (boat.classList.contains("boat-sprite")) {
+          tooltip.innerHTML = `
+            <strong>${escapeHtml(boat.dataset.boat)}</strong>
+            <span>Driver: ${escapeHtml(boat.dataset.driver)}</span>
+            <span>Contact: ${escapeHtml(boat.dataset.phone)}</span>
+            <span>${escapeHtml(boat.dataset.status)} · Safety ${escapeHtml(boat.dataset.safety)}</span>
+          `;
+        } else {
+          tooltip.innerHTML = `
+            <strong>${escapeHtml(boat.dataset.driver)} / ${escapeHtml(boat.dataset.phone)}</strong>
+            <span>${escapeHtml(boat.dataset.boat)} · ${escapeHtml(boat.dataset.status)}</span>
+            <span>Capacity OK ${escapeHtml(boat.dataset.capacity)}</span>
+            <span>To ${escapeHtml(boat.dataset.destination)} · Estimate ${escapeHtml(boat.dataset.eta)}</span>
+          `;
+        }
+        tooltip.classList.add("show");
+        tooltip.setAttribute("aria-hidden", "false");
+        positionBoatTooltip(tooltip, event.clientX, event.clientY);
+      });
+
+      map.addEventListener("mouseout", (event) => {
+        const boat = event.target.closest && event.target.closest(".route-boat, .boat-sprite");
+        if (!boat) return;
+        const nextBoat = event.relatedTarget?.closest && event.relatedTarget.closest(".route-boat, .boat-sprite");
+        if (nextBoat === boat) return;
+        tooltip.classList.remove("show");
+        tooltip.setAttribute("aria-hidden", "true");
+      });
+    }
+
+    function positionBoatTooltip(tooltip, clientX, clientY) {
+      const margin = 12;
+      const width = 260;
+      const height = 96;
+      const left = Math.min(window.innerWidth - width - margin, Math.max(margin, clientX + 14));
+      const top = Math.min(window.innerHeight - height - margin, Math.max(margin, clientY - 12));
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
+    }
+
+    function populateAreaSelectors() {
+      const provinceSelect = document.getElementById("provinceSelect");
+      const districtSelect = document.getElementById("districtSelect");
+      const tambonSelect = document.getElementById("tambonSelect");
+      const intakeArea = document.getElementById("intakeArea");
+
+      provinceSelect.innerHTML = state.areas.provinces.map((area) => option(area.id, area.name)).join("");
+      districtSelect.innerHTML = state.areas.districts.map((area) => option(area.id, area.name)).join("");
+      tambonSelect.innerHTML = option("all", "All tambons") + state.areas.tambons.map((area) => option(area.id, area.name)).join("");
+      intakeArea.innerHTML = state.areas.tambons.map((area) => option(area.id, area.name)).join("");
+
+      tambonSelect.value = state.selectedArea.tambonId;
+      tambonSelect.addEventListener("change", () => {
+        state.selectedArea.tambonId = tambonSelect.value;
+        refreshAll();
+      });
+    }
+
+    function option(value, label) {
+      return "<option value=\"" + value + "\">" + label + "</option>";
+    }
+
+    function refreshAll() {
+      renderDashboard();
+      renderRecentRequests();
+      renderVerification();
+      renderFleet();
+      populateDispatchSelects();
+      renderDispatch();
+      renderMissions();
+      renderPublicTracking();
+      document.getElementById("nav-queue").textContent = state.requests.filter((request) => !request.verified).length;
+      document.getElementById("nav-dispatch").textContent = state.requests.filter((request) => request.verified && !request.missionId && request.status !== "completed").length;
+    }
+
+    function renderDashboard() {
+      const requests = visibleRequests();
+      const boats = visibleBoats();
+      const shelters = visibleShelters();
+      const activeRoutes = getRoutePlans().length;
+      const activeCases = requests.filter((request) => request.status !== "completed").length;
+      const availableBoats = boats.filter((boat) => boat.status === "available").length;
+      const criticalCases = requests.filter((request) => request.priority.band === "critical" && request.status !== "completed").length;
+
+      const metrics = [
+        ["Active cases", activeCases, "All visible rescue requests", "info"],
+        ["Available boat", availableBoats, "Ready for assignment", "good"],
+        ["Active boats", activeRoutes, "Boats moving on planned paths", "info"],
+        ["Critical cases", criticalCases, "Highest severity cases", "critical"]
+      ];
+
+      document.getElementById("dashboardMetrics").innerHTML = metrics.map(([label, value, hint, tone]) => `
+        <article class="card metric span-3 ${tone}">
+          <span class="label">${label}</span>
+          <span class="value">${value}</span>
+          <span class="hint">${hint}</span>
+        </article>
+      `).join("");
+
+      renderCaseProgress(activeCases);
+      renderMap();
+      renderRouteList();
+      renderPriorityBars();
+      renderUrgencyList();
+    }
+
+    function renderCaseProgress(activeCases) {
+      const startingCases = 132;
+      const clearedCases = Math.max(0, startingCases - activeCases);
+      const clearedPct = Math.max(0, Math.min(100, Math.round((clearedCases / startingCases) * 100)));
+      document.getElementById("caseProgress").innerHTML = `
+        <article class="panel case-progress">
+          <div class="case-progress-main">
+            <div class="case-progress-label">
+              <span>Case clearance progress</span>
+              <span>${clearedCases}/${startingCases}</span>
+            </div>
+            <div class="case-progress-track">
+              <div class="case-progress-fill" style="width:${clearedPct}%"></div>
+            </div>
+          </div>
+          <strong>${clearedPct}%</strong>
+        </article>
+      `;
+    }
+
+    function renderPriorityBars() {
+      const requests = visibleRequests().filter((request) => request.status !== "completed");
+      const red = requests.filter((request) => request.priority.band === "critical").length;
+      const yellow = requests.filter((request) => request.priority.band === "high" || request.priority.band === "medium").length;
+      const green = requests.filter((request) => request.priority.band === "low").length;
+      const max = Math.max(red, yellow, green, 1);
+      const rows = [
+        ["Red", red, "red"],
+        ["Yellow", yellow, "yellow"],
+        ["Green", green, "green"]
+      ];
+      document.getElementById("priorityBars").innerHTML = rows.map(([label, value, color]) => `
+        <div class="bar-row">
+          <strong>${label}</strong>
+          <div class="bar-track"><div class="bar-fill ${color}" style="width:${Math.max(3, Math.round((value / max) * 100))}%"></div></div>
+          <span>${value}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderMap() {
+      const requests = visibleRequests().filter((request) => request.status !== "completed");
+      const boats = visibleBoats();
+      const shelters = visibleShelters();
+      const points = [];
+      const routePlans = getRoutePlans();
+      const routedBoatIds = new Set(routePlans.map((route) => route.boat.id));
+
+      points.push(renderBaseMapSvg());
+      routePlans.forEach((route, index) => points.push(renderRouteSvg(route, index)));
+      requests
+        .sort((a, b) => b.priority.score - a.priority.score)
+        .forEach((request, index) => {
+          const requesterName = request.requesterName || "Unknown requester";
+          if (index < 14 || request.status === "assigned" || request.status === "in_progress") {
+            points.push(`<div class="map-point request" style="left:${request.x}%; top:${request.y}%"><span class="map-label"><strong>${request.trackingCode}</strong><span>${requesterName}</span><span>${request.peopleCount} people - ${request.contactPhone}</span><span>${request.priority.band} - ${request.address}</span></span></div>`);
+          } else {
+            points.push(`<span class="case-dot ${request.priority.band}" title="${request.trackingCode} - ${requesterName} - ${request.peopleCount} people - ${request.contactPhone}" style="left:${request.x}%; top:${request.y}%"></span>`);
+          }
+        });
+      shelters.forEach((shelter) => points.push(`<div class="map-point shelter" style="left:${shelter.x}%; top:${shelter.y}%">★<span class="map-label"><strong>${shelter.name}</strong><span>${shelter.status} - ${shelter.occupancy}/${shelter.capacity}</span></span></div>`));
+      boats.forEach((boat) => {
+        if (!routedBoatIds.has(boat.id)) {
+          points.push(renderBoatSprite(boat));
+        }
+      });
+      points.push(`
+        <div class="map-legend">
+          <div class="legend-row">
+            <span class="legend-title">Cases</span>
+            <span class="legend-item"><i class="legend-dot critical"></i>Critical</span>
+            <span class="legend-item"><i class="legend-dot high"></i>High</span>
+            <span class="legend-item"><i class="legend-dot low"></i>Low</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-title">Map</span>
+            <span class="legend-item"><i class="legend-line"></i>Route</span>
+            <span class="legend-item">
+              <svg class="legend-boat-icon" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M15 19 C23 7 42 7 50 19 L45 50 C37 57 27 57 19 50 Z" fill="currentColor" stroke="#ffffff" stroke-width="5"></path>
+                <path d="M24 21 H40 L43 37 H21 Z" fill="#e7fbff" stroke="#ffffff" stroke-width="2"></path>
+              </svg>
+              Boat
+            </span>
+            <span class="legend-item"><i class="legend-star">★</i>Shelter</span>
+          </div>
+        </div>
+      `);
+
+      document.getElementById("opsMap").innerHTML = points.join("");
+    }
+
+    function renderBaseMapSvg() {
+      return `
+        <svg class="base-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path class="map-zone" d="M7 10 L49 7 L55 41 L42 78 L8 88 Z"></path>
+          <path class="map-zone" d="M49 7 L94 13 L91 58 L55 64 L55 41 Z"></path>
+          <path class="map-zone" d="M42 78 L55 64 L91 58 L96 91 L48 94 Z"></path>
+          <path class="map-water" d="M13 3 C22 15 18 27 30 38 C43 50 38 60 50 72 C61 83 65 91 76 98"></path>
+          <path class="map-canal" d="M7 42 C24 39 31 44 42 39 C54 34 63 35 88 28"></path>
+          <path class="map-canal" d="M22 82 C33 71 43 70 55 64 C68 58 77 53 92 47"></path>
+          <path class="map-road major" d="M2 58 C18 55 32 56 44 52 C60 47 72 44 98 40"></path>
+          <path class="map-road major" d="M46 2 C49 22 50 41 56 60 C61 75 66 87 73 99"></path>
+          <path class="map-road" d="M9 22 C26 20 39 23 52 28 C65 33 76 32 94 25"></path>
+          <path class="map-road" d="M16 72 C30 64 42 62 57 57 C70 52 81 55 96 62"></path>
+          <path class="map-road" d="M28 7 C25 24 31 38 30 53 C29 67 35 78 42 94"></path>
+          <path class="map-road" d="M63 9 C62 23 68 35 70 48 C72 64 79 77 86 93"></path>
+          <path class="map-rail" d="M38 0 C41 18 43 31 47 45 C52 62 55 78 58 100"></path>
+          <text class="map-label-text" x="14" y="16">Khlong Hae</text>
+          <text class="map-label-text" x="64" y="19">Kho Hong</text>
+          <text class="map-label-text" x="58" y="87">Khuan Lang</text>
+          <text class="map-label-text" x="15" y="36">Khlong U Taphao</text>
+          <text class="map-label-text" x="6" y="55">Phetkasem Rd</text>
+          <text class="map-label-text" x="58" y="43">Hat Yai urban core</text>
+        </svg>
+      `;
+    }
+
+    function getRoutePlans() {
+      const requestSelect = document.getElementById("dispatchRequestSelect");
+      const shelterSelect = document.getElementById("dispatchShelterSelect");
+      const selectedRequest = state.requests.find((item) => item.id === requestSelect?.value);
+      const selectedShelter = state.shelters.find((item) => item.id === shelterSelect?.value);
+      const defaultShelter = selectedShelter || visibleShelters().find((shelter) => shelter.status === "open") || state.shelters.find((shelter) => shelter.status === "open") || state.shelters[0];
+      const activePlans = state.missions
+        .filter((mission) => mission.status !== "completed" && mission.status !== "cancelled")
+        .map((mission) => {
+          const currentPickup = mission.stops?.find((stop) => stop.type === "pickup" && stop.status === "current")
+            || mission.stops?.find((stop) => stop.type === "pickup" && stop.status === "pending");
+          const request = state.requests.find((item) => item.trackingCode === currentPickup?.code)
+            || state.requests.find((item) => item.id === mission.requestId);
+          const boat = state.boats.find((item) => item.id === mission.boatId);
+          const shelter = state.shelters.find((item) => item.id === mission.shelterId);
+          return request && boat && shelter ? { request, boat, shelter, mission, plan: evaluateBoat(boat, request, shelter), label: "Active mission" } : null;
+        })
+        .filter(Boolean);
+
+      const usedBoatIds = new Set(activePlans.map((route) => route.boat.id));
+      const usedRequestIds = new Set(activePlans.map((route) => route.request.id));
+      const requestPool = visibleRequests()
+        .filter((request) => request.verified && !request.missionId && request.status !== "completed")
+        .sort((a, b) => {
+          if (selectedRequest && a.id === selectedRequest.id) return -1;
+          if (selectedRequest && b.id === selectedRequest.id) return 1;
+          return b.priority.score - a.priority.score;
+        });
+
+      const activeFleetPlans = [];
+      for (const boat of visibleBoats().filter((item) => item.status === "in_use")) {
+        if (activeFleetPlans.length + activePlans.length >= 3) break;
+        if (usedBoatIds.has(boat.id)) continue;
+        const request = requestPool.find((candidate) => !usedRequestIds.has(candidate.id) && boat.maxPeople >= candidate.peopleCount);
+        if (!request) continue;
+        const plan = evaluateBoat(boat, request, defaultShelter);
+        activeFleetPlans.push({ request, boat, shelter: defaultShelter, plan, label: "Boat in use" });
+        usedBoatIds.add(boat.id);
+        usedRequestIds.add(request.id);
+      }
+
+      const suggestedPlans = [];
+      for (const boat of visibleBoats()) {
+        if (suggestedPlans.length + activeFleetPlans.length + activePlans.length >= 3) break;
+        if (usedBoatIds.has(boat.id)) continue;
+        if (boat.status !== "available") continue;
+        const request = requestPool.find((candidate) => !usedRequestIds.has(candidate.id) && evaluateBoat(boat, candidate, defaultShelter).eligible);
+        if (!request) continue;
+        const plan = evaluateBoat(boat, request, defaultShelter);
+        suggestedPlans.push({ request, boat, shelter: defaultShelter, plan, label: "Planned pickup" });
+        usedBoatIds.add(boat.id);
+        usedRequestIds.add(request.id);
+      }
+
+      return [...activePlans, ...activeFleetPlans, ...suggestedPlans].slice(0, 3);
+    }
+
+    function routePointForStop(stop, route) {
+      if (stop.type === "pickup") {
+        return state.requests.find((request) => request.trackingCode === stop.code) || null;
+      }
+      if (stop.type === "shelter") return route.shelter;
+      return null;
+    }
+
+    function routePathPoints(route) {
+      const origin = { x: route.boat.x, y: route.boat.y };
+      if (!route.mission?.stops?.length) return [origin, route.request, route.shelter];
+
+      const stopPoints = route.mission.stops
+        .map((stop) => routePointForStop(stop, route))
+        .filter(Boolean)
+        .map((point) => ({ x: point.x, y: point.y }));
+
+      return [origin, ...stopPoints];
+    }
+
+    function routePathFromPoints(points) {
+      return points
+        .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+        .join(" ");
+    }
+
+    function renderRouteSvg(route, index) {
+      if (!route || !route.request || !route.boat || !route.shelter) return "";
+      const offset = (index - 1) * 8;
+      const points = routePathPoints(route);
+      const path = route.mission?.stops?.length
+        ? routePathFromPoints(points)
+        : `M ${route.boat.x} ${route.boat.y} Q ${(route.boat.x + route.request.x) / 2 + offset} ${(route.boat.y + route.request.y) / 2 - 7 - Math.abs(offset * 0.3)} ${route.request.x} ${route.request.y} Q ${(route.request.x + route.shelter.x) / 2 - offset} ${(route.request.y + route.shelter.y) / 2 + 7 + Math.abs(offset * 0.25)} ${route.shelter.x} ${route.shelter.y}`;
+      const color = routeColor(index);
+      const status = routeStatus(index);
+      const duration = 130 + index * 25;
+      const remainingCapacity = Math.max(0, route.boat.maxPeople - route.request.peopleCount);
+      const boatTransform = status === "lost-signal" ? `translate(${route.boat.x} ${route.boat.y})` : "";
+      const pauseEnd = Math.min(0.56, 0.48 + 3 / duration).toFixed(3);
+      const pickupPause = index < 2 ? ` keyPoints="0;0.5;0.5;1" keyTimes="0;0.48;${pauseEnd};1" calcMode="linear"` : "";
+      const motion = status === "lost-signal" ? "" : `<animateMotion dur="${duration}s" repeatCount="indefinite" rotate="0" path="${path}"${pickupPause}></animateMotion>`;
+      const statusText = routeStatusLabel(status);
+      const capacityText = `${route.request.peopleCount}/${route.boat.maxPeople}, spare ${remainingCapacity}`;
+      const etaText = formatTime(addMinutes(route.plan.etaPickup));
+      return `
+        <svg class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="--route-color:${color}">
+          <path class="route-shadow" d="${path}"></path>
+          <path class="route-line" d="${path}" style="stroke:${color}"></path>
+          <g class="route-boat ${status}" transform="${boatTransform}" data-driver="${escapeAttr(route.boat.driver)}" data-phone="${escapeAttr(route.boat.driverPhone)}" data-boat="${escapeAttr(route.boat.name)}" data-status="${escapeAttr(statusText)}" data-capacity="${escapeAttr(capacityText)}" data-destination="${escapeAttr(route.request.trackingCode)}" data-eta="${escapeAttr(etaText)}">
+            ${motion}
+            <circle cx="0" cy="0" r="4.5" fill="transparent"></circle>
+            <path d="M-2.6 -0.9 C-1.6 -2.9 1.7 -2.9 2.8 -0.9 L2.1 2.9 C0.7 3.6 -0.8 3.6 -2.2 2.9 Z" fill="${color}" stroke="#ffffff" stroke-width="0.5"></path>
+            <path d="M-0.9 -0.9 H1.2 L1.6 1.3 H-1.3 Z" fill="#dff6ff" stroke="#ffffff" stroke-width="0.25"></path>
+            <path d="M-3.2 2.6 C-1.4 3.7 1.2 3.8 3.1 2.6" fill="none" stroke="#bde8ff" stroke-width="0.55" stroke-linecap="round"></path>
+            ${status === "lost-signal" ? '<circle class="lost-signal-alert" cx="2.7" cy="-2.5" r="2.8"></circle><text class="lost-signal-alert-text" x="2.7" y="-2.45">!</text>' : ""}
+          </g>
+        </svg>
+      `;
+    }
+
+    function routeColor(index) {
+      return ["#0b6bcb", "#00777a", "#6e4aa8"][index % 3];
+    }
+
+    function routeStatus(index) {
+      return ["on-time", "delay", "lost-signal"][index % 3];
+    }
+
+    function routeStatusLabel(status) {
+      return status === "on-time" ? "on-time" : status === "delay" ? "delay" : "lost signal";
+    }
+
+    function renderBoatSprite(boat) {
+      const color = boat.status === "unsafe" ? "#bd2c2c" : boat.status === "offline" ? "#65736d" : boat.status === "assigned" || boat.status === "on_mission" || boat.status === "in_use" ? "#0b6bcb" : "#00777a";
+      return `
+        <div class="boat-sprite ${boat.status}" style="left:${boat.x}%; top:${boat.y}%;" data-boat="${escapeAttr(boat.name)}" data-driver="${escapeAttr(boat.driver)}" data-phone="${escapeAttr(boat.driverPhone)}" data-status="${escapeAttr(capitalize(boat.status))}" data-safety="${escapeAttr(capitalize(boat.safety))}">
+          <span class="boat-wake"></span>
+          <svg viewBox="0 0 64 64" role="img" aria-label="${boat.name}">
+            <path d="M15 19 C23 7 42 7 50 19 L45 50 C37 57 27 57 19 50 Z" fill="${color}" stroke="white" stroke-width="3" />
+            <path d="M24 21 H40 L43 37 H21 Z" fill="#e7fbff" stroke="#ffffff" stroke-width="2" />
+            <path d="M18 44 C25 50 39 50 46 44" fill="none" stroke="#bde8ff" stroke-width="4" stroke-linecap="round" />
+            <path d="M31 11 L34 11 L34 20 L31 20 Z" fill="#ffffff" opacity="0.9" />
+          </svg>
+        </div>
+      `;
+    }
+
+    function renderUrgencyList() {
+      const updatesByRequest = new Map();
+      state.events
+        .filter((event) => event.reviewStatus === "unreviewed")
+        .forEach((event) => {
+          if (!updatesByRequest.has(event.requestId)) updatesByRequest.set(event.requestId, []);
+          updatesByRequest.get(event.requestId).push(event);
+        });
+
+      const sortedRequests = visibleRequests()
+        .filter((request) => request.status !== "completed")
+        .sort((a, b) => b.priority.score - a.priority.score);
+
+      const selectedRequests = sortedRequests.slice(0, 5);
+      sortedRequests
+        .filter((request) => updatesByRequest.has(request.id))
+        .forEach((request) => {
+          if (!selectedRequests.some((item) => item.id === request.id)) selectedRequests.push(request);
+        });
+
+      const items = selectedRequests.map((request) => {
+        const eventNotes = (updatesByRequest.get(request.id) || [])
+          .map((event) => `<span><strong>** Unreviewed public update</strong> - ${publicUpdateSummary(event.text)}</span>`)
+          .join("");
+        return `<div class="timeline-item"><strong>${request.trackingCode} - ${request.requesterName || "Unknown requester"} ${badge(request.priority.band)}</strong><span>${request.peopleCount} people / ${request.contactPhone}</span><span>${request.priority.explanation}</span>${eventNotes}</div>`;
+      });
+
+      document.getElementById("urgencyList").innerHTML = items.join("") || "<p class=\"muted\">No urgent signals for this area.</p>";
+    }
+
+    function capacityBeforeRequest(mission, trackingCode) {
+      if (!mission?.stops) return 0;
+      const stopIndex = mission.stops.findIndex((stop) => stop.code === trackingCode);
+      if (stopIndex < 0) return 0;
+      return mission.stops
+        .slice(0, stopIndex)
+        .filter((stop) => stop.type === "pickup")
+        .reduce((total, stop) => total + stop.people, 0);
+    }
+
+    function renderRouteList() {
+      const routes = getRoutePlans();
+      document.getElementById("routeList").innerHTML = routes.map((route, index) => {
+        const casePeople = route.request.peopleCount;
+        const capacityBefore = capacityBeforeRequest(route.mission, route.request.trackingCode);
+        const color = routeColor(index);
+        const status = routeStatus(index);
+        return `
+          <div class="timeline-item route-card" style="border-left-color:${color}; --route-color:${color}">
+            <div class="route-head">
+              <span class="route-dot"></span>
+              <strong>${route.boat.name}: Go to ${route.request.trackingCode} (${casePeople} people)</strong>
+              <span class="route-status ${status}">${routeStatusLabel(status)}</span>
+            </div>
+            <span>${route.boat.driver} / ${route.boat.driverPhone}</span>
+            <span>Capacity: ${capacityBefore}/${route.boat.maxPeople} people</span>
+            <span>Estimate arrival: ${formatTime(addMinutes(route.plan.etaPickup))}</span>
+            <span>Estimate shelter / complete ${formatTime(addMinutes(route.plan.etaShelter))}</span>
+          </div>
+        `;
+      }).join("") || "<p class=\"muted\">No route plans available.</p>";
+    }
+
+    function renderRecentRequests() {
+      const rows = state.requests.slice(0, 6).map((request) => `
+        <tr>
+          <td><strong>${request.trackingCode}</strong><br><span class="muted small">${request.requesterName || "Unknown requester"}<br>${request.address}</span></td>
+          <td>${request.peopleCount}</td>
+          <td>${request.contactPhone}</td>
+          <td>${badge(request.priority.band)}</td>
+          <td>${badge(request.status)}</td>
+        </tr>
+      `).join("");
+      document.getElementById("recentRequests").innerHTML = table(["Tracking / requester", "People", "Phone", "Priority", "Status"], rows);
+    }
+
+    function renderVerification() {
+      const unreviewedEvents = state.events
+        .filter((event) => event.reviewStatus === "unreviewed")
+        .map((event) => ({ type: "event", event, request: state.requests.find((request) => request.id === event.requestId) }))
+        .filter((item) => item.request);
+      const unverifiedRequests = state.requests
+        .filter((request) => !request.verified)
+        .map((request) => ({ type: "request", request, event: null }));
+      const reviewItems = [...unreviewedEvents, ...unverifiedRequests];
+
+      document.getElementById("verificationQueue").innerHTML = reviewItems.map((item) => {
+        const request = item.request;
+        const eventNote = item.event ? `<span><strong>** Unreviewed public update</strong> - ${publicUpdateSummary(item.event.text)}</span>` : "";
+        const actions = item.event
+          ? `<button onclick="reviewEvent('${item.event.id}', 'acknowledged')">Acknowledge</button><button class="secondary" onclick="reviewEvent('${item.event.id}', 'rejected')">Reject</button>`
+          : `<button onclick="verifyRequest('${request.id}')">Verify</button>`;
+        return `
+          <div class="timeline-item">
+            <strong>${request.trackingCode} - ${request.requesterName || "Unknown requester"} ${badge(request.priority.band)}</strong>
+            <span>${request.peopleCount} people / ${request.contactPhone}</span>
+            <span>${request.priority.explanation}</span>
+            ${eventNote}
+            <div class="row">${actions}</div>
+          </div>
+        `;
+      }).join("") || "<p class=\"muted\">No requests or public updates waiting for review.</p>";
+    }
+
+    function publicUpdateSummary(text) {
+      return String(text)
+        .replace(/^Public update from .*?:\\s*/i, "")
+        .replace(/^Public update submitted:\\s*/i, "");
+    }
+
+    function verifyRequest(id) {
+      const request = state.requests.find((item) => item.id === id);
+      if (!request) return;
+      request.verified = true;
+      request.status = "verified";
+      request.priority = scoreRequest(request);
+      addEvent("verified", "Request verified: " + request.trackingCode, request.id);
+      addEvent("priority", "Priority recalculated: " + request.priority.explanation, request.id);
+      toast("Request verified.");
+      refreshAll();
+    }
+
+    function reviewEvent(id, status) {
+      const event = state.events.find((item) => item.id === id);
+      if (!event) return;
+      event.reviewStatus = status;
+      addEvent("event_reviewed", "Public update " + status + ": " + event.text, event.requestId);
+      toast("Update marked " + status + ".");
+      refreshAll();
+    }
+
+    function renderFleet() {
+      const rows = visibleBoats().map((boat) => {
+        return `
+          <tr>
+            <td><strong>${boat.name}</strong><br><span class="muted small">${boat.location}</span></td>
+            <td>${boat.driver}<br><span class="muted small">${boat.team}</span></td>
+            <td>${boat.maxPeople} people</td>
+            <td>${badge(boat.status)}</td>
+            <td>${badge(boat.safety)}</td>
+            <td>${formatTime(boat.lastUpdate)}</td>
+          </tr>
+        `;
+      }).join("");
+      document.getElementById("fleetTable").innerHTML = table(["Boat", "Driver / Team", "Capacity", "Status", "Safety", "Last update"], rows);
+    }
+
+    function populateDispatchSelects() {
+      const requestSelect = document.getElementById("dispatchRequestSelect");
+      const currentRequest = requestSelect.value;
+      const verified = state.requests.filter((request) => request.verified && !request.missionId && request.status !== "completed");
+      requestSelect.innerHTML = verified.map((request) => option(request.id, request.trackingCode + " - " + request.priority.band + " - " + request.peopleCount + " people")).join("");
+      if (verified.some((request) => request.id === currentRequest)) requestSelect.value = currentRequest;
+
+      const shelterSelect = document.getElementById("dispatchShelterSelect");
+      const currentShelter = shelterSelect.value;
+      shelterSelect.innerHTML = state.shelters.map((shelter) => option(shelter.id, shelter.name + " - " + shelter.status + " - " + shelter.occupancy + "/" + shelter.capacity)).join("");
+      if (state.shelters.some((shelter) => shelter.id === currentShelter)) shelterSelect.value = currentShelter;
+    }
+
+    function renderDispatch() {
+      renderDispatchSummary();
+      const requestId = document.getElementById("dispatchRequestSelect").value;
+      const shelterId = document.getElementById("dispatchShelterSelect").value;
+      const request = state.requests.find((item) => item.id === requestId);
+      const shelter = state.shelters.find((item) => item.id === shelterId) || state.shelters[0];
+
+      if (!request) {
+        document.getElementById("dispatchRequestSummary").innerHTML = "<p class=\"muted\">No verified unassigned request is available.</p>";
+        document.getElementById("boatEligibility").innerHTML = "";
+        document.getElementById("shelterWarning").innerHTML = "";
+        return;
+      }
+
+      document.getElementById("dispatchRequestSummary").innerHTML = `
+        <div class="timeline-item">
+          <strong>${request.trackingCode} ${badge(request.priority.band)}</strong>
+          <span>${request.peopleCount} people / ${request.contactPhone}</span>
+          <span>${request.priority.explanation}</span>
+          <span>${request.address} - ${request.landmark}</span>
+        </div>
+      `;
+
+      const shelterTrouble = shelter.status === "full" || shelter.status === "closed";
+      document.getElementById("shelterWarning").innerHTML = `
+        <div class="timeline-item">
+          <strong>${shelter.name} ${badge(shelter.status)}</strong>
+          <span>${shelter.occupancy}/${shelter.capacity} people. ${shelterTrouble ? "Dispatch planner will block normal assignment to this shelter." : "Shelter can receive missions."}</span>
+        </div>
+      `;
+
+      document.getElementById("boatEligibility").innerHTML = state.boats.map((boat) => {
+        const result = evaluateBoat(boat, request, shelter);
+        return `
+          <div class="boat-option ${result.eligible ? "" : "ineligible"}">
+            <div>
+              <strong>${boat.name} - ${boat.team}</strong>
+              <div class="row" style="margin: 0.45rem 0;">
+                ${badge(boat.status)} ${badge(boat.safety)}
+                <span class="badge">Estimate pickup ${result.etaPickup} min</span>
+                <span class="badge">Estimate shelter / complete ${result.etaShelter} min</span>
+              </div>
+              <div class="small ${result.eligible ? "muted" : ""}">
+                ${result.eligible ? "Eligible: safe status, capacity fits, shelter can receive." : "Ineligible: " + result.reasons.join(", ")}
+              </div>
+            </div>
+            <button ${result.eligible ? "" : "disabled"} onclick="assignBoat('${request.id}', '${boat.id}', '${shelter.id}', ${result.etaMin}, ${result.etaMax})">Assign</button>
+          </div>
+        `;
+      }).join("");
+      renderMap();
+    }
+
+    function renderDispatchSummary() {
+      const openRequests = state.requests.filter((request) => request.status !== "completed");
+      const waitingDispatch = state.requests.filter((request) => request.verified && !request.missionId && request.status !== "completed");
+      const unverified = state.requests.filter((request) => !request.verified && request.status !== "completed");
+      const criticalWaiting = waitingDispatch.filter((request) => request.priority.band === "critical").length;
+      const highWaiting = waitingDispatch.filter((request) => request.priority.band === "high" || request.priority.band === "medium").length;
+      const availableBoats = state.boats.filter((boat) => boat.status === "available").length;
+      const metrics = [
+        ["Open cases", openRequests.length, "Not completed yet", "info"],
+        ["Ready to dispatch", waitingDispatch.length, criticalWaiting + " critical / " + highWaiting + " high-med", "critical"],
+        ["Needs verification", unverified.length, "Waiting for verifier review", "warning"],
+        ["Available boat", availableBoats, "Can be assigned now", "good"]
+      ];
+      document.getElementById("dispatchSummary").innerHTML = metrics.map(([label, value, hint, tone]) => `
+        <article class="card metric span-3 ${tone}">
+          <span class="label">${label}</span>
+          <span class="value">${value}</span>
+          <span class="hint">${hint}</span>
+        </article>
+      `).join("");
+    }
+
+    function assignBoat(requestId, boatId, shelterId, etaMin, etaMax) {
+      const request = state.requests.find((item) => item.id === requestId);
+      const boat = state.boats.find((item) => item.id === boatId);
+      const shelter = state.shelters.find((item) => item.id === shelterId);
+      if (!request || !boat || !shelter) return;
+      const plan = evaluateBoat(boat, request, shelter);
+
+      const mission = {
+        id: "mission-" + (state.missions.length + 1).toString().padStart(3, "0"),
+        requestId,
+        boatId,
+        shelterId,
+        status: "assigned",
+        etaMin,
+        etaMax,
+        etaPickup: plan.etaPickup,
+        etaShelter: plan.etaShelter,
+        pickupAt: addMinutes(plan.etaPickup),
+        shelterAt: addMinutes(plan.etaShelter),
+        completeAt: addMinutes(plan.etaShelter),
+        delayReason: "Flooded streets and manual route confirmation",
+        createdAt: nowIso()
+      };
+      state.missions.unshift(mission);
+      request.status = "assigned";
+      request.assignedBoatId = boat.id;
+      request.missionId = mission.id;
+      boat.status = "assigned";
+      addEvent("boat_assigned", boat.name + " assigned to " + request.trackingCode + ". Estimate pickup " + formatTime(mission.pickupAt) + ", estimate shelter/complete " + formatTime(mission.shelterAt) + ".", request.id);
+      toast("Boat assigned.");
+      refreshAll();
+    }
+
+    function renderMissions() {
+      if (!state.missions.length) {
+        document.getElementById("missionList").innerHTML = "<p class=\"muted\">No missions yet. Assign an eligible boat in Manual Dispatch.</p>";
+        return;
+      }
+
+      document.getElementById("missionList").innerHTML = state.missions.map((mission) => {
+        const request = state.requests.find((item) => item.id === mission.requestId);
+        const boat = state.boats.find((item) => item.id === mission.boatId);
+        const shelter = state.shelters.find((item) => item.id === mission.shelterId);
+        const next = missionFlow[missionFlow.indexOf(mission.status) + 1];
+        const stopSummary = mission.stops ? missionStopSummary(mission, boat) : "";
+        const stopList = mission.stops ? renderMissionStops(mission, boat) : "";
+        const stopControl = mission.stops ? renderMissionStopControl(mission) : "";
+        return `
+          <div class="boat-option">
+            <div>
+              <strong>${mission.id} ${badge(mission.status)}</strong>
+              <div class="small muted">${request.trackingCode} - ${boat.name} to ${shelter.name}</div>
+              <div class="row" style="margin-top: 0.45rem;">
+                <span class="badge">Estimate pickup ${formatTime(mission.pickupAt || addMinutes(mission.etaPickup || mission.etaMin))}</span>
+                <span class="badge">Estimate shelter / complete ${formatTime(mission.shelterAt || addMinutes(mission.etaShelter || mission.etaMax))}</span>
+                ${stopSummary}
+                <span class="badge">${safeRequestStatus(request)}</span>
+              </div>
+              ${stopList}
+              ${stopControl}
+            </div>
+            ${mission.stops ? "" : `<button ${next ? "" : "disabled"} onclick="advanceMission('${mission.id}')">${next ? "Advance to " + capitalize(next) : "Complete"}</button>`}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function missionStopSummary(mission, boat) {
+      const onboard = mission.stops
+        .filter((stop) => stop.type === "pickup" && stop.status === "done")
+        .reduce((sum, stop) => sum + stop.people, 0);
+      const plannedPickup = mission.stops
+        .filter((stop) => stop.type === "pickup")
+        .reduce((sum, stop) => sum + stop.people, 0);
+      const spareNow = Math.max(0, boat.maxPeople - onboard);
+      const sparePlanned = Math.max(0, boat.maxPeople - plannedPickup);
+      return `<span class="badge">On board ${onboard}/${boat.maxPeople}</span><span class="badge">Route total ${plannedPickup}/${boat.maxPeople}, spare ${sparePlanned}</span><span class="badge">Empty seats now ${spareNow}</span>`;
+    }
+
+    function renderMissionStops(mission, boat) {
+      return `
+        <div class="mission-stops">
+          ${mission.stops.map((stop, index) => {
+            const marker = stopMarkerSvg(index + 1, stop.status);
+            const passengerText = stop.type === "pickup" ? `${stop.people} people pickup` : `Drop off ${missionStopSummaryPlain(mission)} people`;
+            const capacityText = stop.type === "pickup" ? `Capacity after stop ${Math.min(boat.maxPeople, peopleAfterStop(mission, index))}/${boat.maxPeople}` : "Mission completes at shelter";
+            const title = stop.type === "pickup" ? `Pickup ${index + 1}` : "Shelter";
+            const personText = stop.person ? `${stop.person} · ` : "";
+            return `
+              <div class="mission-stop ${stop.status}">
+                ${marker}
+                <div>
+                  <strong>${title}</strong>
+                  <span>${personText}${stop.location} · ${passengerText} · Estimate ${formatTime(addMinutes(stop.etaMinutes))}</span>
+                </div>
+                <span class="badge">${capacityText}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function stopMarkerSvg(number, status) {
+      const fill = status === "done" ? "#23834b" : status === "current" ? "#0b6bcb" : "#dbe5df";
+      const cls = status === "pending" ? "pending" : "";
+      return `
+        <svg class="stop-marker-svg ${cls}" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="11" fill="${fill}"></circle>
+          <text x="12" y="12">${number}</text>
+        </svg>
+      `;
+    }
+
+    function missionStopSummaryPlain(mission) {
+      return mission.stops
+        .filter((stop) => stop.type === "pickup")
+        .reduce((sum, stop) => sum + stop.people, 0);
+    }
+
+    function peopleAfterStop(mission, stopIndex) {
+      return mission.stops
+        .slice(0, stopIndex + 1)
+        .filter((stop) => stop.type === "pickup")
+        .reduce((sum, stop) => sum + stop.people, 0);
+    }
+
+    function renderMissionStopControl(mission) {
+      const currentStop = mission.stops.find((stop) => stop.status === "current") || mission.stops.find((stop) => stop.status === "pending");
+      if (!currentStop) return "<p class=\"muted small\" style=\"margin-top:0.65rem;\">All stops reached.</p>";
+      return `
+        <div class="stop-control">
+          <button onclick="updateMissionStop('${mission.id}', '${currentStop.id}')">Mark current stop reached</button>
+          <span class="muted small">Current: ${currentStop.type === "pickup" ? currentStop.label.replace(/ - .*/, "") : "Shelter"}</span>
+        </div>
+      `;
+    }
+
+    function updateMissionStop(missionId, stopId) {
+      const mission = state.missions.find((item) => item.id === missionId);
+      if (!mission) return;
+      const selectedIndex = mission.stops.findIndex((stop) => stop.id === stopId);
+      if (selectedIndex < 0) return;
+
+      mission.stops.forEach((stop, index) => {
+        if (index <= selectedIndex) stop.status = "done";
+        else stop.status = "pending";
+      });
+
+      const nextStop = mission.stops.find((stop) => stop.status === "pending");
+      if (nextStop) nextStop.status = "current";
+
+      const request = state.requests.find((item) => item.id === mission.requestId);
+      const boat = state.boats.find((item) => item.id === mission.boatId);
+      const reachedStop = mission.stops[selectedIndex];
+
+      if (reachedStop.type === "shelter") {
+        mission.status = "completed";
+        if (request) request.status = "completed";
+        if (boat) {
+          boat.status = "available";
+          boat.lastUpdate = nowIso();
+        }
+      } else {
+        mission.status = "transporting";
+        if (request) request.status = "in_progress";
+        if (boat) boat.status = "on_mission";
+      }
+
+      addEvent("mission_stop", mission.id + " reached " + reachedStop.label + ".", mission.requestId);
+      toast("Reached " + reachedStop.label + ".");
+      refreshAll();
+    }
+
+    function advanceMission(missionId) {
+      const mission = state.missions.find((item) => item.id === missionId);
+      if (!mission) return;
+      const currentIndex = missionFlow.indexOf(mission.status);
+      const next = missionFlow[currentIndex + 1];
+      if (!next) return;
+
+      const request = state.requests.find((item) => item.id === mission.requestId);
+      const boat = state.boats.find((item) => item.id === mission.boatId);
+      mission.status = next;
+
+      if (next === "on_way") {
+        request.status = "in_progress";
+        boat.status = "on_mission";
+      }
+      if (next === "completed") {
+        request.status = "completed";
+        boat.status = "available";
+        boat.lastUpdate = nowIso();
+      }
+
+      addEvent("mission_status", mission.id + " changed to " + next + " for " + request.trackingCode + ".", request.id);
+      toast("Mission moved to " + next + ".");
+      refreshAll();
+    }
+
+    function renderPublicTracking() {
+      const input = document.getElementById("publicTrackingInput");
+      if (!input.value && state.requests[0]) {
+        input.value = state.requests[0].trackingCode;
+        state.activePublicTrackingCode = state.requests[0].trackingCode;
+      }
+      const code = state.activePublicTrackingCode || input.value.trim();
+      const request = state.requests.find((item) => item.trackingCode === code);
+      const result = document.getElementById("publicResult");
+      if (!request) {
+        result.innerHTML = "<p class=\"muted\">Enter a tracking code from the demo data.</p>";
+        return;
+      }
+      const mission = state.missions.find((item) => item.id === request.missionId);
+      const helperType = mission ? "Boat rescue team assigned" : "Waiting for rescue team assignment";
+      const eta = mission ? "Estimate pickup " + formatTime(mission.pickupAt || addMinutes(mission.etaPickup || mission.etaMin)) + " / estimate shelter " + formatTime(mission.shelterAt || addMinutes(mission.etaShelter || mission.etaMax)) : "Being calculated";
+      const complete = mission ? formatTime(mission.shelterAt || mission.completeAt || addMinutes(mission.etaShelter || mission.etaMax)) : "Being calculated";
+      const delay = mission ? mission.delayReason : "Dispatcher is confirming the nearest safe boat";
+      result.innerHTML = `
+        <div class="public-result">
+          <div class="progress-message">
+            <strong>${safeRequestStatus(request)}</strong>
+          </div>
+          <div class="public-status-row">${badge(request.status)} <span class="badge">${helperType}</span></div>
+          <div><strong>Estimate route timing:</strong> ${eta}</div>
+          <div><strong>Estimate shelter / complete:</strong> ${complete}</div>
+          <div><strong>Delay reason:</strong> ${delay}</div>
+          <p class="muted small">Privacy notice: this public page does not show exact helper location, phone numbers, medical details, internal notes, or priority score.</p>
+        </div>
+      `;
+    }
+
+    function table(headers, rows) {
+      return `
+        <table>
+          <thead><tr>${headers.map((header) => "<th>" + header + "</th>").join("")}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function badge(value) {
+      const cls = String(value).toLowerCase().replace(/_/g, "");
+      return `<span class="badge ${cls}">${capitalize(String(value))}</span>`;
+    }
+
+    window.verifyRequest = verifyRequest;
+    window.reviewEvent = reviewEvent;
+    window.assignBoat = assignBoat;
+    window.advanceMission = advanceMission;
+    window.updateMissionStop = updateMissionStop;
+
+    init();
+  </script>
+</body>
+</html>
