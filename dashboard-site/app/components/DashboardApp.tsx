@@ -37,6 +37,9 @@ const copy = {
     searchProvince: "Tìm tỉnh",
     selectAll: "Chọn tất cả",
     clear: "Bỏ chọn",
+    featureScope: "Lọc bảng và biểu đồ thiên tai; lọc xu hướng tháng nếu có cột feature.",
+    monthScope: "Lọc xu hướng tháng; lọc bảng thiên tai nếu có cột month/time/date.",
+    provinceScope: "Lọc bản đồ và tác động theo tỉnh; lọc bảng thiên tai nếu có cột province/area.",
     totalDamage: "Thiệt hại",
     people: "Ảnh hưởng người",
     houseImpact: "Nhà bị ảnh hưởng",
@@ -80,6 +83,9 @@ const copy = {
     searchProvince: "Search province",
     selectAll: "Select all",
     clear: "Clear",
+    featureScope: "Filters disaster tables/charts; filters monthly trend when feature is provided.",
+    monthScope: "Filters monthly trend; filters disaster tables when month/time/date columns exist.",
+    provinceScope: "Filters province visuals; filters disaster tables when province/area columns exist.",
     totalDamage: "Damage",
     people: "People impact",
     houseImpact: "House impact",
@@ -252,6 +258,65 @@ function featureLabel(row: EventSummary, language: Language) {
   return language === "en" ? row.feature_en || row.feature : row.feature_vi || row.feature;
 }
 
+function comparableText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function monthOption(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function monthOptionsFromText(value?: string | null) {
+  const normalized = comparableText(String(value ?? ""));
+  if (!normalized) return [];
+
+  const monthNames: Record<string, number> = {
+    jan: 1,
+    january: 1,
+    feb: 2,
+    february: 2,
+    mar: 3,
+    march: 3,
+    apr: 4,
+    april: 4,
+    may: 5,
+    jun: 6,
+    june: 6,
+    jul: 7,
+    july: 7,
+    aug: 8,
+    august: 8,
+    sep: 9,
+    sept: 9,
+    september: 9,
+    oct: 10,
+    october: 10,
+    nov: 11,
+    november: 11,
+    dec: 12,
+    december: 12,
+  };
+  const namedMonth = Object.entries(monthNames).find(([name]) => normalized.includes(name));
+  if (namedMonth) return [monthOption(namedMonth[1])];
+
+  const isoDate = normalized.match(/\b(?:19|20)\d{2}\s+(\d{1,2})\s+\d{1,2}\b/);
+  if (isoDate) return [monthOption(Number(isoDate[1]))];
+
+  const prefixedMonth = normalized.match(/\b(?:t|thang|month)\s*(1[0-2]|0?[1-9])\b/);
+  if (prefixedMonth) return [monthOption(Number(prefixedMonth[1]))];
+
+  const numericMonth = normalized.match(/\b(1[0-2]|0?[1-9])\b/);
+  return numericMonth ? [monthOption(Number(numericMonth[1]))] : [];
+}
+
 function severityClass(score: number) {
   if (score >= 70) return "high";
   if (score >= 40) return "medium";
@@ -264,6 +329,7 @@ function Slicer({
   selected,
   onChange,
   label,
+  scope,
   searchable,
   language,
 }: {
@@ -272,6 +338,7 @@ function Slicer({
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
   label?: (value: string) => string;
+  scope?: string;
   searchable?: boolean;
   language: Language;
 }) {
@@ -305,6 +372,7 @@ function Slicer({
           placeholder={t.searchProvince}
         />
       ) : null}
+      {scope ? <p className="slicer-scope">{scope}</p> : null}
       <div className="slicer-actions">
         <button type="button" onClick={() => onChange(new Set(options))}>{t.selectAll}</button>
         <button type="button" onClick={() => onChange(new Set())}>{t.clear}</button>
@@ -754,8 +822,33 @@ function Dashboard({
     return map;
   }, [dataset, language]);
 
-  const filteredEvents = dataset.event_summary.filter((row) => selectedFeatures.has(row.feature));
+  const selectedProvinceLabels = useMemo(
+    () => [...selectedProvinces].map(comparableText),
+    [selectedProvinces]
+  );
+
+  function eventMatchesSelectedMonths(row: EventSummary) {
+    const monthFields = [row.month, row.time, row.report_date].filter(Boolean);
+    if (!monthFields.length) return true;
+    const months = monthFields.flatMap((field) => monthOptionsFromText(field));
+    return months.length ? months.some((month) => selectedMonths.has(month)) : true;
+  }
+
+  function eventMatchesSelectedProvinces(row: EventSummary) {
+    const locationFields = [row.province, row.area].map((field) => comparableText(field ?? "")).filter(Boolean);
+    if (!locationFields.length) return true;
+    return locationFields.some((field) =>
+      selectedProvinceLabels.some((province) => field.includes(province) || province.includes(field))
+    );
+  }
+
+  const filteredEvents = dataset.event_summary.filter((row) =>
+    selectedFeatures.has(row.feature) &&
+    eventMatchesSelectedMonths(row) &&
+    eventMatchesSelectedProvinces(row)
+  );
   const filteredProvinces = dataset.province_summary.filter((row) => selectedProvinces.has(row.province));
+  const filteredMonthlyPatterns = dataset.monthly_patterns.filter((row) => !row.feature || selectedFeatures.has(row.feature));
   const highCount = eventSeverity(filteredEvents).filter((row) => row.score >= 70).length;
   const totalDamage = sumMetric(filteredEvents, "total_damage_million_vnd");
   const totalPeople = filteredEvents.reduce((total, row) => total + peopleImpact(row), 0);
@@ -771,7 +864,7 @@ function Dashboard({
   const monthPoints = monthOptions.map((month, index) => {
     const key = `T${Number(month)}`;
     const value = selectedMonths.has(month)
-      ? dataset.monthly_patterns.reduce((total, row) => total + (row.months[key] ?? 0), 0)
+      ? filteredMonthlyPatterns.reduce((total, row) => total + (row.months[key] ?? 0), 0)
       : 0;
     return { label: monthLabels[language][index], value };
   });
@@ -812,6 +905,7 @@ function Dashboard({
           selected={selectedFeatures}
           onChange={setSelectedFeatures}
           label={(feature) => featureNames.get(feature) ?? feature}
+          scope={t.featureScope}
           language={language}
         />
         <Slicer
@@ -820,6 +914,7 @@ function Dashboard({
           selected={selectedMonths}
           onChange={setSelectedMonths}
           label={(month) => monthLabels[language][Number(month) - 1]}
+          scope={t.monthScope}
           language={language}
         />
         <Slicer
@@ -827,6 +922,7 @@ function Dashboard({
           options={provinceOptions}
           selected={selectedProvinces}
           onChange={setSelectedProvinces}
+          scope={t.provinceScope}
           searchable
           language={language}
         />

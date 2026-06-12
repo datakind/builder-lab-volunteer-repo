@@ -301,6 +301,14 @@ export function parseDashboardWorkbook(bytes: Uint8Array, filename: string): Dis
       feature,
       feature_vi: text(row, "feature_vi") || featureLabels.vi,
       feature_en: text(row, "feature_en") || featureLabels.en,
+      time: text(row, "time") || null,
+      month: text(row, "month") || null,
+      province: text(row, "province") || null,
+      area: text(row, "area") || null,
+      cause: text(row, "cause") || null,
+      report_no: text(row, "report_no") || null,
+      report_date: text(row, "report_date") || null,
+      event_count: nullableNumber(row, "event_count"),
       deaths: number(row, "deaths"),
       missing: number(row, "missing"),
       injured: number(row, "injured"),
@@ -338,6 +346,7 @@ export function parseDashboardWorkbook(bytes: Uint8Array, filename: string): Dis
     }));
     return {
       row: index + 2,
+      feature: text(row, "feature") || null,
       type_vi: typeVi,
       type_en: typeEn,
       count_2025: targetCount,

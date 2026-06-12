@@ -22,6 +22,7 @@ export type DisasterCount = {
 
 export type MonthlyPattern = {
   row?: number;
+  feature?: string | null;
   type_vi: string;
   type_en?: string | null;
   count_2025: number;
@@ -37,6 +38,7 @@ export type EventSummary = {
   feature_en?: string | null;
   time?: string | null;
   month?: string | null;
+  province?: string | null;
   area?: string | null;
   cause?: string | null;
   report_no?: string | null;

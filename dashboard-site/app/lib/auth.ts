@@ -1,6 +1,13 @@
 import { env } from "cloudflare:workers";
 import type { SessionUser } from "./types";
 
+const DEFAULT_ADMIN_EMAILS = [
+  "calvin.tee@outlook.com",
+  "pham.symt@gmail.com",
+  "nhatkyoto@gmail.com",
+  "trongtoanban1@gmail.com",
+];
+
 function getEnv(name: string) {
   return ((env as unknown as Record<string, string | undefined>)[name] ?? "").trim();
 }
@@ -12,10 +19,13 @@ function decodeFullName(request: Request) {
 }
 
 function adminEmails() {
-  return getEnv("ADMIN_EMAILS")
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
+  return new Set([
+    ...DEFAULT_ADMIN_EMAILS,
+    ...getEnv("ADMIN_EMAILS")
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean),
+  ]);
 }
 
 export async function getSession(request: Request): Promise<SessionUser | null> {
@@ -25,7 +35,7 @@ export async function getSession(request: Request): Promise<SessionUser | null> 
   return {
     email,
     username: decodeFullName(request) ?? email,
-    role: adminEmails().includes(email) ? "admin" : "viewer",
+    role: adminEmails().has(email) ? "admin" : "viewer",
   };
 }
 

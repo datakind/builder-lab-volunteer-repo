@@ -312,6 +312,14 @@ a {
   font-weight: 800;
 }
 
+.slicer-scope {
+  margin: -0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .slicer-actions {
   display: flex;
   align-items: center;
