@@ -110,6 +110,7 @@ export type DataResponse = {
 };
 
 export type SessionUser = {
+  email: string;
   username: string;
   role: "viewer" | "admin";
 };

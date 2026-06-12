@@ -23,6 +23,7 @@ export async function getSession(request: Request): Promise<SessionUser | null> 
   if (!email) return null;
 
   return {
+    email,
     username: decodeFullName(request) ?? email,
     role: adminEmails().includes(email) ? "admin" : "viewer",
   };

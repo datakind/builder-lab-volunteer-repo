@@ -29,6 +29,8 @@ const copy = {
     password: "Mật khẩu",
     signIn: "Đăng nhập",
     signOut: "Đăng xuất",
+    adminRole: "Quản trị",
+    viewerRole: "Người xem",
     feature: "Đặc trưng thiên tai",
     month: "Tháng",
     province: "Tỉnh",
@@ -70,6 +72,8 @@ const copy = {
     password: "Password",
     signIn: "Sign in",
     signOut: "Sign out",
+    adminRole: "Admin",
+    viewerRole: "Viewer",
     feature: "Disaster feature",
     month: "Month",
     province: "Province",
@@ -771,6 +775,14 @@ function Dashboard({
           <p>{t.subtitle}</p>
         </div>
         <div className="topbar-controls">
+          {user ? (
+            <div className="account-pill" title={user.email}>
+              <span>{user.email}</span>
+              <strong className={user.role === "admin" ? "admin" : ""}>
+                {user.role === "admin" ? t.adminRole : t.viewerRole}
+              </strong>
+            </div>
+          ) : null}
           <div className="segmented" aria-label="Language">
             <button className={language === "vi" ? "active" : ""} onClick={() => setLanguage("vi")} type="button">VI</button>
             <button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")} type="button">EN</button>
@@ -882,7 +894,7 @@ export default function DashboardApp() {
 
   useEffect(() => {
     async function bootstrap() {
-      const sessionResponse = await fetch("/api/session");
+      const sessionResponse = await fetch("/api/session", { cache: "no-store" });
       const sessionBody = await sessionResponse.json();
       setUser(sessionBody.user);
       await loadData();

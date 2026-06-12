@@ -178,6 +178,43 @@ a {
   padding: 0.55rem 0.75rem;
 }
 
+.account-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: min(360px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.35rem 0.45rem 0.35rem 0.75rem;
+  box-shadow: 0 8px 24px rgba(23, 32, 42, 0.08);
+}
+
+.account-pill span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-pill strong {
+  border-radius: 999px;
+  background: var(--sky);
+  color: var(--river);
+  padding: 0.24rem 0.52rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.account-pill strong.admin {
+  background: var(--mint);
+  color: var(--forest);
+}
+
 .segmented {
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
