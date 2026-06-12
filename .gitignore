@@ -1,0 +1,22 @@
+node_modules/
+
+# Dashboard app local/build artifacts
+dashboard-site/node_modules/
+dashboard-site/.next/
+dashboard-site/dist/
+dashboard-site/.wrangler/
+dashboard-site/dev-server.*.log
+dashboard-site/dev-server.out.log
+
+# Local source-analysis and generated artifacts kept outside the app
+00. THIET HAI NAM 2025 - (31.12).xlsx
+generated/
+outputs/
+skills/
+tools/
+
+# Unrelated local worktree artifacts
+communication-toolkit-site/
+
+# Local secrets
+API_key.txt
