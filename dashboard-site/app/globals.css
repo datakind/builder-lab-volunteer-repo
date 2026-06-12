@@ -494,34 +494,32 @@ a {
 
 .province-map {
   width: 100%;
-  min-height: 520px;
-  max-height: 720px;
+  min-height: 620px;
+  max-height: 780px;
   display: block;
 }
 
-.map-sea {
-  fill: url("#mapSea");
+.regional-map-background {
+  fill: rgba(255, 255, 255, 0.66);
 }
 
-.vietnam-shape {
-  fill: rgba(227, 243, 237, 0.78);
-  stroke: rgba(20, 108, 95, 0.38);
-  stroke-width: 2;
+.region-card rect {
+  fill-opacity: 0.14;
+  stroke-opacity: 0.48;
+  stroke-width: 1.4;
 }
 
-.vietnam-coast {
-  fill: none;
-  stroke: rgba(23, 107, 135, 0.58);
-  stroke-dasharray: 5 7;
-  stroke-linecap: round;
-  stroke-width: 2.4;
+.region-card-label {
+  fill: var(--ink);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
 }
 
-.map-river {
-  fill: none;
-  stroke: rgba(23, 107, 135, 0.26);
-  stroke-linecap: round;
-  stroke-width: 8;
+.region-count {
+  fill: var(--muted);
+  font-size: 0.54rem;
+  font-weight: 800;
 }
 
 .province-marker {
@@ -530,10 +528,11 @@ a {
 }
 
 .province-marker circle {
-  opacity: 0.78;
+  filter: drop-shadow(0 4px 8px rgba(23, 32, 42, 0.16));
+  opacity: 0.84;
   stroke: #fff;
   stroke-width: 1.8;
-  transition: opacity 160ms ease, stroke-width 160ms ease, transform 160ms ease;
+  transition: filter 160ms ease, opacity 160ms ease, stroke-width 160ms ease;
 }
 
 .province-marker.low circle {
@@ -553,13 +552,7 @@ a {
   opacity: 0.96;
   stroke: var(--ink);
   stroke-width: 2.6;
-}
-
-.province-marker text {
-  fill: #fff;
-  font-size: 0.62rem;
-  font-weight: 900;
-  pointer-events: none;
+  filter: drop-shadow(0 6px 12px rgba(23, 32, 42, 0.22));
 }
 
 .map-tooltip {

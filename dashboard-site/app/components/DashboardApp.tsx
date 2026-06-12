@@ -117,10 +117,11 @@ const displayCopy = {
     monthlyTrendLegend: "Số lần ghi nhận",
     occurrences: "Số lần",
     reportYear: "Năm báo cáo",
-    mapTitle: "Bản đồ tác động theo tỉnh",
-    mapNote: "Kích thước điểm thể hiện thiệt hại ước tính; màu sắc thể hiện mức nghiêm trọng.",
+    mapTitle: "Tác động theo tỉnh và vùng",
+    mapNote: "Sơ đồ theo vùng: các tỉnh được nhóm theo vùng. Kích thước điểm thể hiện thiệt hại ước tính; màu sắc thể hiện mức nghiêm trọng.",
     mapLegendDamage: "Thiệt hại lớn hơn",
     mapLegendSeverity: "Mức nghiêm trọng",
+    mapRegion: "Vùng",
     mapNoData: "Không có dữ liệu tỉnh phù hợp",
   },
   en: {
@@ -133,79 +134,94 @@ const displayCopy = {
     monthlyTrendLegend: "Recorded occurrences",
     occurrences: "Occurrences",
     reportYear: "Report Year",
-    mapTitle: "Province impact map",
-    mapNote: "Bubble size represents estimated damage; color represents severity band.",
+    mapTitle: "Province impact by region",
+    mapNote: "Schematic regional view: provinces are grouped by region. Bubble size represents estimated damage; color represents severity band.",
     mapLegendDamage: "Higher damage",
     mapLegendSeverity: "Severity band",
+    mapRegion: "Region",
     mapNoData: "No matching province data",
   },
 };
 
-const provinceCoordinates: Record<string, { lat: number; lon: number }> = {
-  "Hà Giang": { lat: 22.82, lon: 104.98 },
-  "Cao Bằng": { lat: 22.67, lon: 106.25 },
-  "Lào Cai": { lat: 22.48, lon: 103.95 },
-  "Sơn La": { lat: 21.33, lon: 103.91 },
-  "Lai Châu": { lat: 22.39, lon: 103.45 },
-  "Bắc Kạn": { lat: 22.15, lon: 105.84 },
-  "Lạng Sơn": { lat: 21.85, lon: 106.76 },
-  "Tuyên Quang": { lat: 21.82, lon: 105.21 },
-  "Yên Bái": { lat: 21.72, lon: 104.91 },
-  "Thái Nguyên": { lat: 21.59, lon: 105.84 },
-  "Điện Biên": { lat: 21.38, lon: 103.02 },
-  "Phú Thọ": { lat: 21.32, lon: 105.19 },
-  "Vĩnh Phúc": { lat: 21.31, lon: 105.6 },
-  "Bắc Giang": { lat: 21.28, lon: 106.2 },
-  "Bắc Ninh": { lat: 21.19, lon: 106.07 },
-  "Hà Nội": { lat: 21.03, lon: 105.85 },
-  "Quảng Ninh": { lat: 21.25, lon: 107.33 },
-  "Hải Dương": { lat: 20.94, lon: 106.33 },
-  "Hải Phòng": { lat: 20.84, lon: 106.68 },
-  "Hòa Bình": { lat: 20.82, lon: 105.34 },
-  "Hưng Yên": { lat: 20.65, lon: 106.06 },
-  "Hà Nam": { lat: 20.54, lon: 105.92 },
-  "Thái Bình": { lat: 20.45, lon: 106.34 },
-  "Nam Định": { lat: 20.43, lon: 106.16 },
-  "Ninh Bình": { lat: 20.25, lon: 105.97 },
-  "Thanh Hóa": { lat: 19.81, lon: 105.78 },
-  "Nghệ An": { lat: 19.23, lon: 104.92 },
-  "Hà Tĩnh": { lat: 18.34, lon: 105.9 },
-  "Quảng Bình": { lat: 17.47, lon: 106.62 },
-  "Quảng Trị": { lat: 16.75, lon: 107.19 },
-  "Thừa Thiên Huế": { lat: 16.47, lon: 107.59 },
-  "Đà Nẵng": { lat: 16.05, lon: 108.2 },
-  "Quảng Nam": { lat: 15.57, lon: 108.48 },
-  "Quảng Ngãi": { lat: 15.12, lon: 108.8 },
-  "Kon Tum": { lat: 14.35, lon: 107.98 },
-  "Gia Lai": { lat: 13.98, lon: 108 },
-  "Bình Định": { lat: 13.78, lon: 109.22 },
-  "Phú Yên": { lat: 13.09, lon: 109.09 },
-  "Đắk Lắk": { lat: 12.71, lon: 108.24 },
-  "Khánh Hòa": { lat: 12.25, lon: 109.18 },
-  "Đắk Nông": { lat: 12.26, lon: 107.61 },
-  "Lâm Đồng": { lat: 11.94, lon: 108.45 },
-  "Ninh Thuận": { lat: 11.57, lon: 108.99 },
-  "Bình Phước": { lat: 11.75, lon: 106.92 },
-  "Tây Ninh": { lat: 11.36, lon: 106.15 },
-  "Bình Dương": { lat: 11.17, lon: 106.67 },
-  "Đồng Nai": { lat: 11.07, lon: 107.17 },
-  "Bình Thuận": { lat: 10.94, lon: 108.1 },
-  "TP. Hồ Chí Minh": { lat: 10.78, lon: 106.7 },
-  "Long An": { lat: 10.69, lon: 106.25 },
-  "Bà Rịa - Vũng Tàu": { lat: 10.54, lon: 107.24 },
-  "Đồng Tháp": { lat: 10.58, lon: 105.68 },
-  "An Giang": { lat: 10.52, lon: 105.13 },
-  "Tiền Giang": { lat: 10.36, lon: 106.35 },
-  "Vĩnh Long": { lat: 10.25, lon: 105.97 },
-  "Bến Tre": { lat: 10.24, lon: 106.38 },
-  "Cần Thơ": { lat: 10.04, lon: 105.78 },
-  "Kiên Giang": { lat: 10.02, lon: 105.08 },
-  "Trà Vinh": { lat: 9.93, lon: 106.34 },
-  "Hậu Giang": { lat: 9.78, lon: 105.47 },
-  "Sóc Trăng": { lat: 9.6, lon: 105.98 },
-  "Bạc Liêu": { lat: 9.29, lon: 105.72 },
-  "Cà Mau": { lat: 9.18, lon: 105.15 },
+const provinceRegions: Record<string, RegionKey> = {
+  "Lai Châu": "northwest",
+  "Lào Cai": "northwest",
+  "Điện Biên": "northwest",
+  "Yên Bái": "northwest",
+  "Sơn La": "northwest",
+  "Hòa Bình": "northwest",
+  "Hà Giang": "northeast",
+  "Cao Bằng": "northeast",
+  "Tuyên Quang": "northeast",
+  "Bắc Kạn": "northeast",
+  "Phú Thọ": "northeast",
+  "Thái Nguyên": "northeast",
+  "Lạng Sơn": "northeast",
+  "Bắc Giang": "northeast",
+  "Quảng Ninh": "northeast",
+  "Vĩnh Phúc": "red-river-delta",
+  "Hà Nội": "red-river-delta",
+  "Bắc Ninh": "red-river-delta",
+  "Hưng Yên": "red-river-delta",
+  "Hải Dương": "red-river-delta",
+  "Hải Phòng": "red-river-delta",
+  "Hà Nam": "red-river-delta",
+  "Thái Bình": "red-river-delta",
+  "Ninh Bình": "red-river-delta",
+  "Nam Định": "red-river-delta",
+  "Thanh Hóa": "north-central-coast",
+  "Nghệ An": "north-central-coast",
+  "Hà Tĩnh": "north-central-coast",
+  "Quảng Bình": "north-central-coast",
+  "Quảng Trị": "north-central-coast",
+  "Thừa Thiên Huế": "north-central-coast",
+  "Đà Nẵng": "south-central-coast",
+  "Quảng Nam": "south-central-coast",
+  "Quảng Ngãi": "south-central-coast",
+  "Bình Định": "south-central-coast",
+  "Phú Yên": "south-central-coast",
+  "Khánh Hòa": "south-central-coast",
+  "Ninh Thuận": "south-central-coast",
+  "Bình Thuận": "south-central-coast",
+  "Kon Tum": "central-highlands",
+  "Gia Lai": "central-highlands",
+  "Đắk Lắk": "central-highlands",
+  "Đắk Nông": "central-highlands",
+  "Lâm Đồng": "central-highlands",
+  "Bình Phước": "southeast",
+  "Tây Ninh": "southeast",
+  "Bình Dương": "southeast",
+  "Đồng Nai": "southeast",
+  "Bà Rịa - Vũng Tàu": "southeast",
+  "TP. Hồ Chí Minh": "southeast",
+  "Long An": "mekong-river-delta",
+  "Đồng Tháp": "mekong-river-delta",
+  "Tiền Giang": "mekong-river-delta",
+  "An Giang": "mekong-river-delta",
+  "Vĩnh Long": "mekong-river-delta",
+  "Bến Tre": "mekong-river-delta",
+  "Cần Thơ": "mekong-river-delta",
+  "Kiên Giang": "mekong-river-delta",
+  "Hậu Giang": "mekong-river-delta",
+  "Trà Vinh": "mekong-river-delta",
+  "Sóc Trăng": "mekong-river-delta",
+  "Bạc Liêu": "mekong-river-delta",
+  "Cà Mau": "mekong-river-delta",
 };
+
+const regionLayouts = {
+  northwest: { x: 28, y: 36, w: 168, h: 150, color: "#ffda5c", en: "Northwest", vi: "Tây Bắc" },
+  northeast: { x: 224, y: 36, w: 168, h: 172, color: "#ff8844", en: "Northeast", vi: "Đông Bắc" },
+  "red-river-delta": { x: 224, y: 238, w: 168, h: 154, color: "#ee4f56", en: "Red River Delta", vi: "Đồng bằng sông Hồng" },
+  "north-central-coast": { x: 28, y: 238, w: 168, h: 184, color: "#23c552", en: "North Central Coast", vi: "Bắc Trung Bộ" },
+  "central-highlands": { x: 28, y: 452, w: 168, h: 154, color: "#5b74ff", en: "Central Highlands", vi: "Tây Nguyên" },
+  "south-central-coast": { x: 224, y: 422, w: 168, h: 184, color: "#55d2d8", en: "South Central Coast", vi: "Duyên hải Nam Trung Bộ" },
+  "mekong-river-delta": { x: 28, y: 636, w: 168, h: 164, color: "#ef5aa7", en: "Mekong River Delta", vi: "Đồng bằng sông Cửu Long" },
+  southeast: { x: 224, y: 636, w: 168, h: 144, color: "#8c57ff", en: "Southeast", vi: "Đông Nam Bộ" },
+};
+
+type RegionKey = keyof typeof regionLayouts;
+const regionKeys = Object.keys(regionLayouts) as RegionKey[];
 
 function numberFormat(value: number, digits = 0) {
   return new Intl.NumberFormat("en-US", {
@@ -508,6 +524,8 @@ type ProvinceMarker = {
   row: ProvinceSummary;
   score: number;
   band: string;
+  regionKey: RegionKey;
+  regionName: string;
   x: number;
   y: number;
   radius: number;
@@ -519,39 +537,55 @@ function ProvinceImpactMap({ rows, language }: { rows: ProvinceSummary[]; langua
   const severity = provinceSeverity(rows);
   const maxDamage = Math.max(...rows.map((row) => row.total_damage_million_vnd), 1);
   const width = 420;
-  const height = 720;
-  const minLon = 102.6;
-  const maxLon = 109.55;
-  const minLat = 8.7;
-  const maxLat = 23.05;
+  const height = 830;
+  const grouped = regionKeys.reduce((accumulator, regionKey) => {
+    accumulator[regionKey] = [];
+    return accumulator;
+  }, {} as Record<RegionKey, Array<{ row: ProvinceSummary; score: number; band: string }>>);
 
-  function project(lat: number, lon: number) {
-    const x = 36 + ((lon - minLon) / (maxLon - minLon)) * 332;
-    const y = 24 + ((maxLat - lat) / (maxLat - minLat)) * 644;
-    return { x, y };
-  }
+  rows.forEach((row, index) => {
+    const regionKey = provinceRegions[row.province];
+    if (!regionKey) return;
+    grouped[regionKey].push({
+      row,
+      score: severity[index]?.score ?? 0,
+      band: language === "en" ? severity[index]?.bandEn ?? "Low" : severity[index]?.bandVi ?? "Thấp",
+    });
+  });
 
-  const markers = rows
-    .map((row, index) => {
-      const coordinate = provinceCoordinates[row.province];
-      if (!coordinate) return null;
-      const { x, y } = project(coordinate.lat, coordinate.lon);
-      const score = severity[index]?.score ?? 0;
-      const radius = 5 + Math.sqrt(Math.max(row.total_damage_million_vnd, 0) / maxDamage) * 20;
-      return {
-        row,
-        score,
-        band: language === "en" ? severity[index]?.bandEn ?? "Low" : severity[index]?.bandVi ?? "Thấp",
-        x,
-        y,
-        radius,
-      } satisfies ProvinceMarker;
+  const markers = regionKeys
+    .flatMap((regionKey) => {
+      const layout = regionLayouts[regionKey];
+      const group = [...grouped[regionKey]].sort((a, b) => b.row.total_damage_million_vnd - a.row.total_damage_million_vnd);
+      const columns = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(group.length || 1))));
+      const rowCount = Math.max(1, Math.ceil(group.length / columns));
+      const horizontalPad = 22;
+      const topPad = 52;
+      const bottomPad = 22;
+      const cellWidth = (layout.w - horizontalPad * 2) / columns;
+      const cellHeight = (layout.h - topPad - bottomPad) / rowCount;
+
+      return group.map((item, index) => {
+        const column = index % columns;
+        const rowIndex = Math.floor(index / columns);
+        const radius = 5 + Math.sqrt(Math.max(item.row.total_damage_million_vnd, 0) / maxDamage) * 13;
+
+        return {
+          row: item.row,
+          score: item.score,
+          band: item.band,
+          regionKey,
+          regionName: language === "en" ? layout.en : layout.vi,
+          x: layout.x + horizontalPad + (column + 0.5) * cellWidth,
+          y: layout.y + topPad + (rowIndex + 0.5) * cellHeight,
+          radius,
+        } satisfies ProvinceMarker;
+      });
     })
-    .filter((marker): marker is ProvinceMarker => Boolean(marker))
     .sort((a, b) => a.radius - b.radius);
 
-  const tooltipX = hovered ? Math.max(12, Math.min(hovered.x > 235 ? hovered.x - 194 : hovered.x + 18, width - 188)) : 0;
-  const tooltipY = hovered ? Math.max(14, Math.min(hovered.y - 76, height - 136)) : 0;
+  const tooltipX = hovered ? Math.max(12, Math.min(hovered.x > 235 ? hovered.x - 204 : hovered.x + 18, width - 196)) : 0;
+  const tooltipY = hovered ? Math.max(14, Math.min(hovered.y - 88, height - 170)) : 0;
 
   return (
     <div className="province-map-panel">
@@ -565,29 +599,32 @@ function ProvinceImpactMap({ rows, language }: { rows: ProvinceSummary[]; langua
         <b>{language === "en" ? "High" : "Cao"}</b>
       </div>
       <svg className="province-map" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={t.mapTitle}>
-        <defs>
-          <linearGradient id="mapSea" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stopColor="#f3faf7" />
-            <stop offset="100%" stopColor="#e1eef5" />
-          </linearGradient>
-        </defs>
-        <rect className="map-sea" width={width} height={height} rx="18" />
-        <path
-          className="vietnam-shape"
-          d="M168 30 C124 58 92 98 110 144 C126 184 148 196 139 235 C127 290 160 320 148 374 C139 416 178 456 168 503 C158 552 118 590 137 640 C154 685 214 698 259 664 C214 636 213 592 243 548 C273 503 267 465 237 429 C207 392 218 348 252 319 C292 285 293 239 255 209 C217 179 224 132 270 93 C235 55 204 36 168 30 Z"
-        />
-        <path
-          className="vietnam-coast"
-          d="M267 94 C231 132 224 179 256 209 C293 239 292 285 253 319 C218 348 207 392 238 429 C268 465 274 503 244 548 C214 592 215 636 260 664"
-        />
-        <path
-          className="map-river"
-          d="M117 641 C156 623 194 621 236 648"
-        />
+        <rect className="regional-map-background" width={width} height={height} rx="18" />
+        {regionKeys.map((regionKey) => {
+          const layout = regionLayouts[regionKey];
+          const label = language === "en" ? layout.en : layout.vi;
+          return (
+            <g className="region-card" key={regionKey}>
+              <rect
+                fill={layout.color}
+                height={layout.h}
+                rx="16"
+                stroke={layout.color}
+                width={layout.w}
+                x={layout.x}
+                y={layout.y}
+              />
+              <text className="region-card-label" x={layout.x + 14} y={layout.y + 24}>{label}</text>
+              <text className="region-count" x={layout.x + 14} y={layout.y + 40}>
+                {`${grouped[regionKey].length} ${t.province.toLowerCase()}`}
+              </text>
+            </g>
+          );
+        })}
         {markers.length ? markers.map((marker) => (
           <g
             className={`province-marker ${severityClass(marker.score)}`}
-            key={marker.row.province}
+            key={`${marker.regionKey}-${marker.row.province}`}
             onBlur={() => setHovered(null)}
             onFocus={() => setHovered(marker)}
             onMouseEnter={() => setHovered(marker)}
@@ -595,23 +632,23 @@ function ProvinceImpactMap({ rows, language }: { rows: ProvinceSummary[]; langua
             tabIndex={0}
           >
             <title>
-              {`${marker.row.province}: ${numberFormat(marker.row.total_damage_million_vnd, 1)} million VND, ${numberFormat(peopleImpact(marker.row))} people impact, severity ${numberFormat(marker.score, 1)}`}
+              {`${marker.row.province} (${marker.regionName}): ${numberFormat(marker.row.total_damage_million_vnd, 1)} million VND, ${numberFormat(peopleImpact(marker.row))} people impact, severity ${numberFormat(marker.score, 1)}`}
             </title>
             <circle cx={marker.x} cy={marker.y} r={marker.radius} />
-            {marker.radius >= 16 ? <text x={marker.x} y={marker.y + 4} textAnchor="middle">{numberFormat(marker.score, 0)}</text> : null}
           </g>
         )) : (
           <text className="map-empty" x={width / 2} y={height / 2} textAnchor="middle">{t.mapNoData}</text>
         )}
         {hovered ? (
           <g className="map-tooltip" transform={`translate(${tooltipX} ${tooltipY})`}>
-            <rect width="176" height="122" rx="10" />
+            <rect width="188" height="156" rx="10" />
             <text className="tooltip-title" x="12" y="22">{hovered.row.province}</text>
-            <text x="12" y="44">{`${t.damage}: ${numberFormat(hovered.row.total_damage_million_vnd, 1)}`}</text>
-            <text x="12" y="62">{`${t.people}: ${numberFormat(peopleImpact(hovered.row))}`}</text>
-            <text x="12" y="80">{`${t.affected}: ${numberFormat(hovered.row.affected_households)}`}</text>
-            <text x="12" y="98">{`${t.houses}: ${numberFormat(hovered.row.house_impact)}`}</text>
-            <text x="12" y="116">{`${t.severity}: ${numberFormat(hovered.score, 1)} (${hovered.band})`}</text>
+            <text x="12" y="44">{`${t.mapRegion}: ${hovered.regionName}`}</text>
+            <text x="12" y="64">{`${t.damage}: ${numberFormat(hovered.row.total_damage_million_vnd, 1)}`}</text>
+            <text x="12" y="84">{`${t.people}: ${numberFormat(peopleImpact(hovered.row))}`}</text>
+            <text x="12" y="104">{`${t.affected}: ${numberFormat(hovered.row.affected_households)}`}</text>
+            <text x="12" y="124">{`${t.houses}: ${numberFormat(hovered.row.house_impact)}`}</text>
+            <text x="12" y="144">{`${t.severity}: ${numberFormat(hovered.score, 1)} (${hovered.band})`}</text>
           </g>
         ) : null}
       </svg>
