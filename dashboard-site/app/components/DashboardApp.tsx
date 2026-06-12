@@ -735,6 +735,16 @@ function Dashboard({
   const [selectedProvinces, setSelectedProvinces] = useState(new Set(provinceOptions));
   const t = displayCopy[language];
   const reportingYear = dataset.reporting_year ?? dataset.annual_compare?.reporting_year ?? 2025;
+  const datasetKey = [
+    data.metadata.id ?? "seed",
+    data.metadata.sourceFile,
+    data.metadata.createdAt ?? "initial",
+    dataset.reporting_year ?? "unknown-year",
+  ].join("|");
+  const monthOptionsKey = monthOptions.join("|");
+  const monthlyDataKey = dataset.monthly_patterns
+    .map((row) => `${row.type_vi}:${monthOptions.map((month) => row.months[`T${Number(month)}`] ?? 0).join(",")}`)
+    .join("|");
 
   const featureNames = useMemo(() => {
     const map = new Map<string, string>();
@@ -872,7 +882,12 @@ function Dashboard({
             <p>{t.monthlyTrendNote}</p>
           </div>
         </div>
-        <LineChart points={monthPoints} legendLabel={t.monthlyTrendLegend} yAxisLabel={t.occurrences} />
+        <LineChart
+          key={`${datasetKey}-${monthOptionsKey}-${monthlyDataKey}-${[...selectedMonths].sort().join(",")}-${language}`}
+          points={monthPoints}
+          legendLabel={t.monthlyTrendLegend}
+          yAxisLabel={t.occurrences}
+        />
       </section>
 
       {user?.role === "admin" ? <AdminUpload language={language} onUploaded={onData} /> : null}
@@ -886,7 +901,7 @@ export default function DashboardApp() {
   const [loading, setLoading] = useState(true);
 
   async function loadData() {
-    const response = await fetch("/api/data");
+    const response = await fetch("/api/data", { cache: "no-store" });
     if (response.ok) {
       setData(await response.json());
     }
@@ -911,9 +926,20 @@ export default function DashboardApp() {
     return <main className="loading-screen">Loading data</main>;
   }
 
+  const monthlyDataKey = data.dataset.monthly_patterns
+    .map((row) => `${row.type_vi}:${data.dataset.filter_lists.months.map((month) => row.months[`T${Number(month)}`] ?? 0).join(",")}`)
+    .join("|");
+  const dashboardKey = [
+    data.metadata.id ?? "seed",
+    data.metadata.sourceFile,
+    data.metadata.createdAt ?? "initial",
+    data.dataset.reporting_year ?? "unknown-year",
+    monthlyDataKey,
+  ].join("|");
+
   return (
     <Dashboard
-      key={`${data.metadata.id ?? "seed"}-${data.dataset.source_file}`}
+      key={dashboardKey}
       user={user}
       data={data}
       onData={setData}
