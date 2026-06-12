@@ -60,11 +60,11 @@ function readText(files: Record<string, Uint8Array>, path: string) {
 
 function parseSharedStrings(xml: string) {
   const strings: string[] = [];
-  const siRegex = /<si\b[^>]*>([\s\S]*?)<\/si>/g;
+  const siRegex = /<(?:\w+:)?si\b[^>]*>([\s\S]*?)<\/(?:\w+:)?si>/g;
   let siMatch: RegExpExecArray | null;
   while ((siMatch = siRegex.exec(xml))) {
     const parts: string[] = [];
-    const tRegex = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+    const tRegex = /<(?:\w+:)?t\b[^>]*>([\s\S]*?)<\/(?:\w+:)?t>/g;
     let tMatch: RegExpExecArray | null;
     while ((tMatch = tRegex.exec(siMatch[1]))) {
       parts.push(decodeXml(tMatch[1]));
@@ -76,14 +76,14 @@ function parseSharedStrings(xml: string) {
 
 function parseSheetNames(workbookXml: string, relsXml: string) {
   const rels = new Map<string, string>();
-  const relRegex = /<Relationship\b([^>]*)\/>/g;
+  const relRegex = /<(?:\w+:)?Relationship\b([^>]*)\/>/g;
   let relMatch: RegExpExecArray | null;
   while ((relMatch = relRegex.exec(relsXml))) {
     rels.set(attr(relMatch[1], "Id"), normalizePath(attr(relMatch[1], "Target")));
   }
 
   const sheets = new Map<string, string>();
-  const sheetRegex = /<sheet\b([^>]*)\/>/g;
+  const sheetRegex = /<(?:\w+:)?sheet\b([^>]*?)(?:\/>|>[\s\S]*?<\/(?:\w+:)?sheet>)/g;
   let sheetMatch: RegExpExecArray | null;
   while ((sheetMatch = sheetRegex.exec(workbookXml))) {
     const name = attr(sheetMatch[1], "name");
@@ -98,11 +98,11 @@ function parseSheetNames(workbookXml: string, relsXml: string) {
 
 function parseRows(xml: string, sharedStrings: string[]) {
   const rows: unknown[][] = [];
-  const rowRegex = /<row\b[^>]*>([\s\S]*?)<\/row>/g;
+  const rowRegex = /<(?:\w+:)?row\b[^>]*>([\s\S]*?)<\/(?:\w+:)?row>/g;
   let rowMatch: RegExpExecArray | null;
   while ((rowMatch = rowRegex.exec(xml))) {
     const row: unknown[] = [];
-    const cellRegex = /<c\b([^>]*)>([\s\S]*?)<\/c>/g;
+    const cellRegex = /<(?:\w+:)?c\b([^>]*)>([\s\S]*?)<\/(?:\w+:)?c>/g;
     let cellMatch: RegExpExecArray | null;
     while ((cellMatch = cellRegex.exec(rowMatch[1]))) {
       const cellAttrs = cellMatch[1];
@@ -110,8 +110,8 @@ function parseRows(xml: string, sharedStrings: string[]) {
       const ref = attr(cellAttrs, "r");
       const type = attr(cellAttrs, "t");
       const index = columnIndex(ref);
-      const valueMatch = body.match(/<v\b[^>]*>([\s\S]*?)<\/v>/);
-      const inlineMatch = body.match(/<t\b[^>]*>([\s\S]*?)<\/t>/);
+      const valueMatch = body.match(/<(?:\w+:)?v\b[^>]*>([\s\S]*?)<\/(?:\w+:)?v>/);
+      const inlineMatch = body.match(/<(?:\w+:)?t\b[^>]*>([\s\S]*?)<\/(?:\w+:)?t>/);
       let value: unknown = "";
 
       if (type === "s" && valueMatch) {
@@ -167,8 +167,25 @@ function nullableNumber(row: Record<string, unknown>, key: string) {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
+function firstNullableNumber(row: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = nullableNumber(row, key);
+    if (value !== null) return value;
+  }
+  return null;
+}
+
 function unique(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));
+}
+
+function lookupKey(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
 }
 
 function bySheet(files: Record<string, Uint8Array>, sheets: Map<string, string>, name: string, sharedStrings: string[]) {
@@ -266,6 +283,13 @@ export function parseDashboardWorkbook(bytes: Uint8Array, filename: string): Dis
     type_en: text(row, "type_en") || null,
     count: number(row, "count"),
   }));
+  const disasterCountLookup = new Map<string, number>();
+  for (const row of disaster_counts) {
+    disasterCountLookup.set(lookupKey(row.type_vi), row.count);
+    if (row.type_en) {
+      disasterCountLookup.set(lookupKey(row.type_en), row.count);
+    }
+  }
 
   const event_summary = eventRows.map((row, index) => {
     const feature = text(row, "feature", "other");
@@ -298,13 +322,25 @@ export function parseDashboardWorkbook(bytes: Uint8Array, filename: string): Dis
   } satisfies ProvinceSummary));
 
   const monthly_patterns = monthlyRows.map((row, index) => {
-    const months = Object.fromEntries(MONTH_KEYS.map((key) => [key, nullableNumber(row, key)]));
-    const derivedCount = Object.values(months).reduce((total, value) => total + (value ?? 0), 0);
+    const typeVi = text(row, "type_vi");
+    const typeEn = text(row, "type_en") || null;
+    const rawMonths = Object.fromEntries(MONTH_KEYS.map((key) => [key, nullableNumber(row, key.toLowerCase())]));
+    const rawTotal = Object.values(rawMonths).reduce((total, value) => total + (value ?? 0), 0);
+    const rowCount = firstNullableNumber(row, ["count_current_year", "count", "count_2025", "occurrences"]);
+    const syncedCount = disasterCountLookup.get(lookupKey(typeVi)) ?? (typeEn ? disasterCountLookup.get(lookupKey(typeEn)) : undefined);
+    const targetCount = rowCount ?? syncedCount ?? rawTotal;
+    const scale = rawTotal > 0 && targetCount > 0 && Math.abs(rawTotal - targetCount) > 0.001
+      ? targetCount / rawTotal
+      : 1;
+    const months = Object.fromEntries(MONTH_KEYS.map((key) => {
+      const value = rawMonths[key];
+      return [key, value === null ? null : value * scale];
+    }));
     return {
       row: index + 2,
-      type_vi: text(row, "type_vi"),
-      type_en: text(row, "type_en") || null,
-      count_2025: number(row, "count_2025") || derivedCount,
+      type_vi: typeVi,
+      type_en: typeEn,
+      count_2025: targetCount,
       months,
     } satisfies MonthlyPattern;
   });

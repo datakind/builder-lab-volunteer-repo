@@ -743,7 +743,7 @@ function Dashboard({
   ].join("|");
   const monthOptionsKey = monthOptions.join("|");
   const monthlyDataKey = dataset.monthly_patterns
-    .map((row) => `${row.type_vi}:${monthOptions.map((month) => row.months[`T${Number(month)}`] ?? 0).join(",")}`)
+    .map((row) => `${row.type_vi}:${row.count_2025}:${monthOptions.map((month) => row.months[`T${Number(month)}`] ?? 0).join(",")}`)
     .join("|");
 
   const featureNames = useMemo(() => {
@@ -927,7 +927,7 @@ export default function DashboardApp() {
   }
 
   const monthlyDataKey = data.dataset.monthly_patterns
-    .map((row) => `${row.type_vi}:${data.dataset.filter_lists.months.map((month) => row.months[`T${Number(month)}`] ?? 0).join(",")}`)
+    .map((row) => `${row.type_vi}:${row.count_2025}:${data.dataset.filter_lists.months.map((month) => row.months[`T${Number(month)}`] ?? 0).join(",")}`)
     .join("|");
   const dashboardKey = [
     data.metadata.id ?? "seed",
